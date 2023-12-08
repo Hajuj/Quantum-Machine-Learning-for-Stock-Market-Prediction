@@ -3,6 +3,10 @@ import torch.nn as nn
 
 import pennylane as qml
 
+# Set the seed for reproducibility
+seed = 42
+torch.manual_seed(seed)
+
 
 class QLSTM(nn.Module):
     def __init__(self,
@@ -80,46 +84,29 @@ class QLSTM(nn.Module):
         # self.clayer_out = [torch.nn.Linear(n_qubits, self.hidden_size) for _ in range(4)]
 
     def forward(self, x, init_states=None):
-        '''
-        x.shape is (batch_size, seq_length, feature_size)
-        recurrent_activation -> sigmoid
-        activation -> tanh
-        '''
         if self.batch_first is True:
             batch_size, seq_length, features_size = x.size()
         else:
             seq_length, batch_size, features_size = x.size()
 
-        hidden_seq = []
         if init_states is None:
             h_t = torch.zeros(batch_size, self.hidden_size)  # hidden state (output)
             c_t = torch.zeros(batch_size, self.hidden_size)  # cell state
         else:
-            ''' for now we ignore the fact that in PyTorch you can stack multiple RNNs
-            so we take only the first elements of the init_states tuple init_states[0][0], init_states[1][0] '''
             h_t, c_t = init_states
             h_t = h_t[0]
             c_t = c_t[0]
 
         for t in range(seq_length):
-            # get features from the t-th element in seq, for all entries in the batch
             x_t = x[:, t, :]
-
-            # Concatenate input and hidden state
             v_t = torch.cat((h_t, x_t), dim=1)
-
-            # match qubit dimension
             y_t = self.clayer_in(v_t)
-
-            f_t = torch.sigmoid(self.clayer_out(self.VQC['forget'](y_t)))  # forget block
-            i_t = torch.sigmoid(self.clayer_out(self.VQC['input'](y_t)))  # input block
-            g_t = torch.tanh(self.clayer_out(self.VQC['update'](y_t)))  # update block
-            o_t = torch.sigmoid(self.clayer_out(self.VQC['output'](y_t)))  # output block
+            f_t = torch.sigmoid(self.clayer_out(self.VQC['forget'](y_t)))
+            i_t = torch.sigmoid(self.clayer_out(self.VQC['input'](y_t)))
+            g_t = torch.tanh(self.clayer_out(self.VQC['update'](y_t)))
+            o_t = torch.sigmoid(self.clayer_out(self.VQC['output'](y_t)))
 
             c_t = (f_t * c_t) + (i_t * g_t)
             h_t = o_t * torch.tanh(c_t)
 
-            hidden_seq.append(h_t.unsqueeze(0))
-        hidden_seq = torch.cat(hidden_seq, dim=0)
-        hidden_seq = hidden_seq.transpose(0, 1).contiguous()
-        return hidden_seq, (h_t, c_t)
+        return h_t
