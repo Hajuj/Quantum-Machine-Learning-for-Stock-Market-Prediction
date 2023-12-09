@@ -15,6 +15,7 @@ np.random.seed(seed)
 
 
 # Initialize the QLSTM model
+#TODO: Check input size!
 input_size = 1
 hidden_size = 1
 n_qubits = 4
@@ -97,11 +98,11 @@ train_data_length = batch_size * num_train_batches
 # Flatten the list of predictions for plotting
 predicted_points = torch.cat(predictions, dim=0).view(-1)
 
-dummies = np.zeros((preprocess.X_train.shape[0], preprocess.sequence_length + 1))
-dummies[:, 0] = predicted_points
-dummies = preprocess.inverse_transform(dummies)
+# dummies = np.zeros((preprocess.X_train.shape[0], preprocess.sequence_length + 1))
+# dummies[:, 0] = predicted_points
+# dummies = preprocess.inverse_transform(dummies)
 
-# Plot the entire sine curve
+# Plot the entire actual data
 plt.plot(x_values, y_values, label='Actual')
 
 # print(len(x_values[train_data_length:train_data_length + len(predicted_points)]))

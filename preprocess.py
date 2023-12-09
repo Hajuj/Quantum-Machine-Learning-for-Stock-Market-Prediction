@@ -40,12 +40,12 @@ def scale_data(data):
 def split_data(X, y, train_ratio=0.7):
     """Split the data into training and test sets."""
     split_index = int(len(X) * train_ratio)
-    X_train, X_test = X[:split_index], X[split_index:]
-    y_train, y_test = y[:split_index], y[split_index:]
+    X_train, X_test = X[:split_index].copy(), X[split_index:].copy()
+    y_train, y_test = y[:split_index].copy(), y[split_index:].copy()
 
-    # Make a copy of the array to ensure positive strides
-    X_train = np.flip(X_train, axis=1).copy()
-    X_test = np.flip(X_test, axis=1).copy()
+    # # Make a copy of the array to ensure positive strides
+    # X_train = np.flip(X_train, axis=1).copy()
+    # X_test = np.flip(X_test, axis=1).copy()
 
     return X_train, X_test, y_train, y_test
 
@@ -81,9 +81,13 @@ shifted_df = prepare_dataframe_for_lstm(data, sequence_length)
 shifted_df_as_np = scale_data(shifted_df.to_numpy())
 
 X, y = shifted_df_as_np[:, 1:], shifted_df_as_np[:, 0]
+# print("Before flipping: ", X)
 X = np.flip(X, axis=1)
+# print("After flipping: ", X)
 
 X_train, X_test, y_train, y_test = split_data(X, y)
+# print("After 2nd flipping: ", X_train)
+# print("Y Train: ", y_train)
 X_train, y_train = reshape_for_lstm(X_train, y_train, sequence_length)
 X_test, y_test = reshape_for_lstm(X_test, y_test, sequence_length)
 
@@ -96,14 +100,17 @@ X_test, y_test = reshape_for_lstm(X_test, y_test, sequence_length)
 # Creating datasets and data loaders
 train_dataset = TimeSeriesDataset(X_train, y_train)
 test_dataset = TimeSeriesDataset(X_test, y_test)
-
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+# for i in range(len(train_dataset)):
+#     x, y = train_dataset[i]
+#     print(f"X[{i}]: {x}, y[{i}]: {y}")
+##TODO: check shuffle hier!!!
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-for x_batch, y_batch in train_loader:
-    print("Shape of X in train_loader:", x_batch.shape)
-    print("Shape of Y in train_loader:", y_batch.shape)
-    break  # Only check the first batch
+# for x_batch, y_batch in train_loader:
+#     print("Shape of X in train_loader:", x_batch.shape)
+#     print("Shape of Y in train_loader:", y_batch.shape)
+#     break  # Only check the first batch
 #
 # for x_batch, y_batch in test_loader:
 #     print("Shape of X in test_loader:", x_batch.shape)
