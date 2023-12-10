@@ -1,19 +1,20 @@
-import joblib
+import os
+
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import numpy as np
-import matplotlib.pyplot as plt
 
-from qlstm import QLSTM
 import preprocess
+from qlstm import QLSTM
 
 # Set the seed for reproducibility
 seed = 42
 torch.manual_seed(seed)
 np.random.seed(seed)
-scaler = joblib.load('scaler.pkl')
 
 # Initialize the QLSTM model
 # TODO: Check input size!
@@ -72,35 +73,58 @@ def test_model(model, test_loader, loss_function, scaler):
 
 n_epochs = 20
 
-# Training the model
-train_model(model, preprocess.train_loader, loss_function, optimizer, n_epochs)
+best_stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'GOOGL', 'AMZN',
+               'MSFT', 'AAPL', 'ABBV', 'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C',
+               'MU']
 
-# Testing the model
-predicted_points = test_model(model, preprocess.test_loader, loss_function, scaler)
+plots = './code/plots'
+if not os.path.exists(plots):
+    os.makedirs(plots)
 
-# Plotting
-# Load the entire dataset (x and y values)
-data = pd.read_csv(preprocess.data_path)
-x_values = data['timesteps'].values
-y_values = data['data'].values
+for stock in best_stocks:
+    data_path = f'code/datasets/stock_data/{stock}.csv'
+    train_loader, test_loader, batch_size, scaler = preprocess.get_loaders(data_path)
 
-# Calculate the starting index for test data
-batch_size = preprocess.batch_size
-num_train_batches = len(preprocess.train_loader)
-train_data_length = batch_size * num_train_batches
+    # Training the model
+    train_model(model, train_loader, loss_function, optimizer, n_epochs)
 
-# Plot the entire actual data
-plt.plot(x_values, y_values, label='Actual')
+    # Testing the model
+    predicted_points = test_model(model, test_loader, loss_function, scaler)
 
-# Plot the predicted points for the test data
-plt.scatter(x_values[train_data_length:train_data_length + len(predicted_points)],
-            predicted_points,
-            color='red',
-            label='Predicted',
-            s=1)
+    # Plotting
+    # Load the entire dataset (x and y values)
+    data = pd.read_csv(data_path)
+    data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
+    y_values = data['Close'].values
 
-plt.title('Apple Stock Prediction')
-plt.xlabel('Time Steps')
-plt.ylabel('Price')
-plt.legend()
-plt.show()
+    # Convert 'Time' to the format matplotlib requires
+    x_values = mdates.date2num(data['Time'].values)
+
+    # Calculate the starting index for test data
+    num_train_batches = len(train_loader)
+    train_data_length = batch_size * num_train_batches
+
+    # Plot the entire actual data
+    plt.plot(x_values, y_values, '-', label='Actual')
+
+    # Plot the predicted points for the test data
+    plt.scatter(x_values[train_data_length:train_data_length + len(predicted_points)],
+                predicted_points,
+                color='red',
+                label='Predicted',
+                s=3)
+
+    # Set the locator and formatter for the x-axis
+    locator = mdates.AutoDateLocator(minticks=3, maxticks=10)
+    formatter = mdates.ConciseDateFormatter(locator)
+    plt.gca().xaxis.set_major_locator(locator)
+    plt.gca().xaxis.set_major_formatter(formatter)
+
+    plt.title(f'{stock} Stock Prediction')
+    plt.xlabel('Time Steps')
+    plt.ylabel('Price')
+    plt.legend()
+
+    plt.savefig(plots + f'/{stock}.png', dpi=300, format='png', bbox_inches='tight')
+
+    plt.show()

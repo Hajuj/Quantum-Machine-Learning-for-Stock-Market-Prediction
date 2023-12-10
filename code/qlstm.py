@@ -1,7 +1,6 @@
+import pennylane as qml
 import torch
 import torch.nn as nn
-
-import pennylane as qml
 
 # Set the seed for reproducibility
 seed = 42
