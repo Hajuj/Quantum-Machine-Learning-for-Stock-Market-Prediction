@@ -10,6 +10,8 @@ import torch.optim as optim
 
 import preprocess
 from qlstm import QLSTM
+from qrnn import QRNN
+from lstm import LSTM
 
 # Set the seed for reproducibility
 seed = 42
@@ -17,12 +19,15 @@ torch.manual_seed(seed)
 np.random.seed(seed)
 
 # Initialize the QLSTM model
-# TODO: Check input size!
 input_size = 1
 hidden_size = 1
 n_qubits = 4
 n_qlayers = 2
-model = QLSTM(input_size, hidden_size, n_qubits=n_qubits, n_qlayers=n_qlayers)
+QLSTM = QLSTM(input_size, hidden_size, n_qubits=n_qubits, n_qlayers=n_qlayers)
+QRNN = QRNN(input_size, hidden_size, n_qubits=n_qubits, n_qlayers=n_qlayers)
+LSTM = LSTM(input_size, hidden_size, 1)
+
+model = QLSTM
 
 # Loss function and optimizer
 loss_function = nn.MSELoss()
@@ -44,6 +49,41 @@ def train_model(model, train_loader, loss_function, optimizer, n_epochs):
         avg_loss = total_loss / len(train_loader)
         print(f"Epoch {epoch + 1}/{n_epochs}, Loss: {avg_loss:.4f}")
 
+
+# def test_model(model, test_loader, loss_function, scaler):
+#     model.eval()  # Set the model to evaluation mode
+#     test_loss = 0
+#     all_predictions = []
+#
+#     with torch.no_grad():  # No need to track gradients during testing
+#         for X_batch, y_batch in test_loader:
+#             updated_X_batch = X_batch.clone()  # Create a copy to update
+#             for i in range(updated_X_batch.shape[0]):  # Loop over the batch size
+#                 for j in range(updated_X_batch.shape[1]):  # Loop over the sequence length
+#                     if updated_X_batch[i, j, 0] == -1.0000:
+#                         # Predict and update the value
+#                         output = model(updated_X_batch)
+#                         updated_X_batch[i, j, 0] = output[i]
+#
+#             # Final prediction with the updated X_batch
+#             final_output = model(updated_X_batch)
+#             loss = loss_function(final_output, y_batch)
+#             test_loss += loss.item()
+#             all_predictions.append(final_output)
+#
+#     # Convert predictions to numpy
+#     predicted_points = torch.cat(all_predictions, dim=0).view(-1).numpy()
+#
+#     # Prepare a dummy array with the correct shape
+#     dummy_array = np.zeros((len(predicted_points), scaler.n_features_in_))
+#     dummy_array[:, 0] = predicted_points  # Assuming target variable is the first feature
+#
+#     # Apply inverse transform to the dummy array
+#     denormalized_predictions = scaler.inverse_transform(dummy_array)[:, 0].flatten()
+#
+#     avg_test_loss = test_loss / len(test_loader)
+#     print(f"Test Loss: {avg_test_loss:.4f}")
+#     return denormalized_predictions
 
 def test_model(model, test_loader, loss_function, scaler):
     model.eval()  # Set the model to evaluation mode
@@ -77,7 +117,7 @@ best_stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM',
                'MSFT', 'AAPL', 'ABBV', 'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C',
                'MU']
 
-plots = './code/plots'
+plots = './code/plots_lstm_alex'
 if not os.path.exists(plots):
     os.makedirs(plots)
 

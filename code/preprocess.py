@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import pandas as pd
 import torch
@@ -8,6 +10,9 @@ from torch.utils.data import Dataset, DataLoader
 seed = 42
 torch.manual_seed(seed)
 np.random.seed(seed)
+pd.set_option('display.max_columns', None)
+np.set_printoptions(threshold=sys.maxsize)
+torch.set_printoptions(threshold=10_000)
 
 
 def load_and_clean_data(file_path):
