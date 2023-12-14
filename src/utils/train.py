@@ -9,20 +9,21 @@ import torch.nn as nn
 import torch.optim as optim
 
 import preprocess
-from qlstm import QLSTM
-from qrnn import QRNN
-from lstm import LSTM
+from src.models.lstm import LSTM
+from src.models.qlstm import QLSTM
+from src.models.qrnn import QRNN
 
 # Set the seed for reproducibility
 seed = 42
 torch.manual_seed(seed)
 np.random.seed(seed)
 
-# Initialize the QLSTM model
+# Initialize the model
 input_size = 1
 hidden_size = 1
 n_qubits = 4
 n_qlayers = 2
+
 QLSTM = QLSTM(input_size, hidden_size, n_qubits=n_qubits, n_qlayers=n_qlayers)
 QRNN = QRNN(input_size, hidden_size, n_qubits=n_qubits, n_qlayers=n_qlayers)
 LSTM = LSTM(input_size, hidden_size, 1)
@@ -117,12 +118,12 @@ best_stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM',
                'MSFT', 'AAPL', 'ABBV', 'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C',
                'MU']
 
-plots = './code/plots_lstm_alex'
+plots = '../plots/lstm_alex'
 if not os.path.exists(plots):
     os.makedirs(plots)
 
 for stock in best_stocks:
-    data_path = f'code/datasets/stock_data/{stock}.csv'
+    data_path = f'../datasets/stock_data/{stock}.csv'
     train_loader, test_loader, batch_size, scaler = preprocess.get_loaders(data_path)
 
     # Training the model
