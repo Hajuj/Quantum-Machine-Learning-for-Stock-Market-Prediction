@@ -90,6 +90,7 @@ def test_model(model, test_loader, loss_function, scaler):
     model.eval()  # Set the model to evaluation mode
     test_loss = 0
     predictions = []
+
     with torch.no_grad():  # No need to track gradients during testing
         for X_batch, y_batch in test_loader:
             output = model(X_batch)
@@ -109,7 +110,7 @@ def test_model(model, test_loader, loss_function, scaler):
 
     avg_test_loss = test_loss / len(test_loader)
     print(f"Test Loss: {avg_test_loss:.4f}")
-    return denormalized_predictions
+    return denormalized_predictions, avg_test_loss
 
 
 n_epochs = 20
@@ -137,6 +138,9 @@ for stock in best_stocks:
     # Load the entire dataset (x and y values)
     data = pd.read_csv(data_path)
     data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
+
+    # Convert 'Time' to the format matplotlib requires
+    x_values = mdates.date2num(data['Time'].values)
     y_values = data['Close'].values
 
     # Calculate the starting index for test data
