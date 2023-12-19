@@ -130,7 +130,8 @@ for stock in best_stocks:
     train_model(model, train_loader, loss_function, optimizer, n_epochs)
 
     # Testing the model
-    predicted_points = test_model(model, test_loader, loss_function, scaler)
+    predicted_points, avg_test_loss = test_model(model, test_loader, loss_function, scaler)
+    predicted_points_np = predicted_points.tolist()
 
     # Plotting
     # Load the entire dataset (x and y values)
@@ -138,12 +139,22 @@ for stock in best_stocks:
     data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
     y_values = data['Close'].values
 
-    # Convert 'Time' to the format matplotlib requires
-    x_values = mdates.date2num(data['Time'].values)
-
     # Calculate the starting index for test data
     num_train_batches = len(train_loader)
     train_data_length = batch_size * num_train_batches
+
+    # difference between actual and predicted points
+    x_test_area = x_values[train_data_length:train_data_length + len(predicted_points)]
+    y_test_area = y_values[train_data_length:train_data_length + len(predicted_points)]  # müssen hier richtigen Bereich auswählen
+
+    baseline_points = []
+    for i in y_values[train_data_length - 1:train_data_length + len(predicted_points)]:
+        baseline_points.append(i)
+    baseline_points = baseline_points[:-1]
+
+    baseline_loss = loss_function(torch.tensor(baseline_points), torch.tensor(y_test_area))
+
+    print(f"Baseline Loss: {baseline_loss:.4f}")
 
     # Plot the entire actual data
     plt.plot(x_values, y_values, '-', label='Actual')
@@ -153,6 +164,13 @@ for stock in best_stocks:
                 predicted_points,
                 color='red',
                 label='Predicted',
+                s=3)
+
+    # Plot the baseline
+    plt.scatter(x_values[train_data_length:train_data_length + len(predicted_points)],
+                baseline_points,
+                color='black',
+                label='Baseline',
                 s=3)
 
     # Set the locator and formatter for the x-axis
