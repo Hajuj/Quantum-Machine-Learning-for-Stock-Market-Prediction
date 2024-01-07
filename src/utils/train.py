@@ -34,6 +34,10 @@ model = QLSTM
 loss_function = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.03)
 
+model_path = f'../trained_model/qlstm'
+if not os.path.exists(model_path):
+    os.makedirs(model_path)
+
 
 def train_model(model, train_loader, loss_function, optimizer, n_epochs):
     for epoch in range(n_epochs):
@@ -50,43 +54,34 @@ def train_model(model, train_loader, loss_function, optimizer, n_epochs):
         avg_loss = total_loss / len(train_loader)
         print(f"Epoch {epoch + 1}/{n_epochs}, Loss: {avg_loss:.4f}")
 
+    torch.save(model.state_dict(), model_path + '/qsltm.pth')
 
-# def test_model(model, test_loader, loss_function, scaler):
-#     model.eval()  # Set the model to evaluation mode
-#     test_loss = 0
-#     all_predictions = []
-#
-#     with torch.no_grad():  # No need to track gradients during testing
-#         for X_batch, y_batch in test_loader:
-#             updated_X_batch = X_batch.clone()  # Create a copy to update
-#             for i in range(updated_X_batch.shape[0]):  # Loop over the batch size
-#                 for j in range(updated_X_batch.shape[1]):  # Loop over the sequence length
-#                     if updated_X_batch[i, j, 0] == -1.0000:
-#                         # Predict and update the value
-#                         output = model(updated_X_batch)
-#                         updated_X_batch[i, j, 0] = output[i]
-#
-#             # Final prediction with the updated X_batch
-#             final_output = model(updated_X_batch)
-#             loss = loss_function(final_output, y_batch)
-#             test_loss += loss.item()
-#             all_predictions.append(final_output)
-#
-#     # Convert predictions to numpy
-#     predicted_points = torch.cat(all_predictions, dim=0).view(-1).numpy()
-#
-#     # Prepare a dummy array with the correct shape
-#     dummy_array = np.zeros((len(predicted_points), scaler.n_features_in_))
-#     dummy_array[:, 0] = predicted_points  # Assuming target variable is the first feature
-#
-#     # Apply inverse transform to the dummy array
-#     denormalized_predictions = scaler.inverse_transform(dummy_array)[:, 0].flatten()
-#
-#     avg_test_loss = test_loss / len(test_loader)
-#     print(f"Test Loss: {avg_test_loss:.4f}")
-#     return denormalized_predictions
+
+def test_model_10day(model, last_sequence, scaler):
+    model.load_state_dict(torch.load(model_path + '/qsltm.pth'))
+    model.eval()
+    predictions = []
+    with torch.no_grad():
+        output = model(last_sequence)
+        new_sequence = last_sequence
+        predictions.append(output)
+        for _ in range(9):
+            new_sequence = preprocess.create_new_sequence(new_sequence, output)
+            output = model(new_sequence)
+            predictions.append(output)
+
+    predicted_points = torch.cat(predictions, dim=0).view(-1).numpy()
+    dummy_array = np.zeros((len(predicted_points), scaler.n_features_in_))
+    dummy_array[:, 0] = predicted_points  # Assuming target variable is the first feature
+
+    # Apply inverse transform to the dummy array
+    denormalized_predictions = scaler.inverse_transform(dummy_array)[:, 0].flatten()
+
+    return denormalized_predictions
+
 
 def test_model(model, test_loader, loss_function, scaler):
+    model.load_state_dict(torch.load(model_path + '/qsltm.pth'))
     model.eval()  # Set the model to evaluation mode
     test_loss = 0
     predictions = []
@@ -113,13 +108,15 @@ def test_model(model, test_loader, loss_function, scaler):
     return denormalized_predictions, avg_test_loss
 
 
-n_epochs = 20
+n_epochs = 1
 
-best_stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'GOOGL', 'AMZN',
-               'MSFT', 'AAPL', 'ABBV', 'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C',
-               'MU']
+# best_stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'GOOGL', 'AMZN',
+#                'MSFT', 'AAPL', 'ABBV', 'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C',
+#                'MU']
 
-plots = '../plots/lstm_alex'
+best_stocks = ['NVDA']
+
+plots = '../plots/qlstm_10'
 if not os.path.exists(plots):
     os.makedirs(plots)
 
@@ -130,9 +127,27 @@ for stock in best_stocks:
     # Training the model
     train_model(model, train_loader, loss_function, optimizer, n_epochs)
 
+for stock in best_stocks:
+    data_path = f'../datasets/stock_data/{stock}.csv'
+    train_loader, test_loader, batch_size, scaler = preprocess.get_loaders(data_path)
+
     # Testing the model
     predicted_points, avg_test_loss = test_model(model, test_loader, loss_function, scaler)
     predicted_points_np = predicted_points.tolist()
+
+    last_sequence = torch.tensor(
+        [[ 0.9600],
+         [ 0.9908],
+         [ 0.9814],
+         [ 1.0000],
+         [ 0.9763],
+         [ 0.9136],
+         [ 0.8656],
+         [ 0.8894],
+         [ 0.8679],
+         [ 0.8842]])
+    last_sequence = last_sequence.reshape(-1, 10, 1)
+    predicted_10_points = test_model_10day(model, last_sequence, scaler)
 
     # Plotting
     # Load the entire dataset (x and y values)
@@ -164,18 +179,16 @@ for stock in best_stocks:
     plt.plot(x_values, y_values, '-', label='Actual')
 
     # Plot the predicted points for the test data
-    plt.scatter(x_values[train_data_length:train_data_length + len(predicted_points)],
+    plt.plot(x_values[train_data_length:train_data_length + len(predicted_points)],
                 predicted_points,
                 color='red',
-                label='Predicted',
-                s=3)
+                label='Predicted')
 
     # Plot the baseline
-    plt.scatter(x_values[train_data_length:train_data_length + len(predicted_points)],
+    plt.plot(x_values[train_data_length:train_data_length + len(predicted_points)],
                 baseline_points,
-                color='black',
-                label='Baseline',
-                s=3)
+                color='yellow',
+                label='Baseline')
 
     # Set the locator and formatter for the x-axis
     locator = mdates.AutoDateLocator(minticks=3, maxticks=10)
@@ -189,5 +202,34 @@ for stock in best_stocks:
     plt.legend()
 
     plt.savefig(plots + f'/{stock}.png', dpi=300, format='png', bbox_inches='tight')
+
+    plt.show()
+
+# Plot 10 days from 30-11-2023
+
+    data = pd.read_csv('../datasets/stock_data_10_days/NVDA.csv')
+    data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
+    x_values = data['Time'].values
+    y_values = data['Close'].values
+
+    plt.plot(x_values, y_values, '-', label='Actual')
+
+    plt.plot(x_values,
+             predicted_10_points,
+             color='red',
+             label='Predicted')
+
+    # Set the locator and formatter for the x-axis
+    locator = mdates.AutoDateLocator(minticks=3, maxticks=10)
+    formatter = mdates.ConciseDateFormatter(locator)
+    plt.gca().xaxis.set_major_locator(locator)
+    plt.gca().xaxis.set_major_formatter(formatter)
+
+    plt.title(f'{stock} Stock Prediction')
+    plt.xlabel('Time Steps')
+    plt.ylabel('Price')
+    plt.legend()
+
+    plt.savefig(plots + f'/{stock}_10.png', dpi=300, format='png', bbox_inches='tight')
 
     plt.show()

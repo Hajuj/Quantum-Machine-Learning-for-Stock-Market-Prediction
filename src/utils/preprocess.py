@@ -96,3 +96,10 @@ def get_loaders(data_path):
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     return train_loader, test_loader, batch_size, scaler
+
+
+def create_new_sequence(last_sequence, output):
+    updated_sequence = last_sequence[:, 1:, :]
+    output = torch.tensor([output]).reshape(-1, 1, 1)
+    updated_sequence = torch.cat([updated_sequence, output], dim=1)
+    return updated_sequence
