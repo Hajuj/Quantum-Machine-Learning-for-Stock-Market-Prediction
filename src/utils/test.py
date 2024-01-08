@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 
 import preprocess
+import evaluation
 from src.models.lstm import LSTM
 from src.models.qlstm import QLSTM
 from src.models.qrnn import QRNN
@@ -28,6 +29,7 @@ QRNN = QRNN(input_size, hidden_size, n_qubits=n_qubits, n_qlayers=n_qlayers)
 LSTM = LSTM(input_size, hidden_size, 1)
 
 model = QLSTM
+model_name = 'QLSTM'  # needed for evaluation
 
 loss_function = nn.MSELoss()
 
@@ -133,9 +135,9 @@ for i, stock in enumerate(best_stocks):
         baseline_points.append(i)
     baseline_points = baseline_points[:-1]
 
-    baseline_loss = loss_function(torch.tensor(baseline_points), torch.tensor(y_test_area))
+    # baseline_loss = loss_function(torch.tensor(baseline_points), torch.tensor(y_test_area))
 
-    print(f"Baseline Loss: {baseline_loss:.4f}\n")
+    # print(f"Baseline Loss: {baseline_loss:.4f}\n")
 
     # Plot the entire actual data
     plt.plot(x_values, y_values, '-', label='Actual')
@@ -195,3 +197,7 @@ for i, stock in enumerate(best_stocks):
     plt.savefig(plots + f'/{stock}_10.png', dpi=300, format='png', bbox_inches='tight')
 
     plt.show()
+
+    # Evaluation
+
+    evaluation.evaluate_results(y_values, predicted_10_points, stock, model_name)
