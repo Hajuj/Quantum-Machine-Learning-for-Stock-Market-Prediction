@@ -98,6 +98,19 @@ def get_loaders(data_path):
     return train_loader, test_loader, batch_size, scaler
 
 
+def get_last_sequence(data_path):
+    data = pd.read_csv(data_path)
+    data = data[['Close']]
+    data['Close'] = pd.to_numeric(data['Close'], errors='coerce')
+    df = data.to_numpy()
+    df, scaler = scale_data(df)
+    last_sequence = df[-10:]
+    last_sequence = last_sequence.reshape((-1, 10, 1))
+    last_sequence = torch.tensor(last_sequence).float()
+
+    return last_sequence
+
+
 def create_new_sequence(last_sequence, output):
     updated_sequence = last_sequence[:, 1:, :]
     output = torch.tensor([output]).reshape(-1, 1, 1)

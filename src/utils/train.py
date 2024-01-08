@@ -57,179 +57,18 @@ def train_model(model, train_loader, loss_function, optimizer, n_epochs):
     torch.save(model.state_dict(), model_path + '/qsltm.pth')
 
 
-def test_model_10day(model, last_sequence, scaler):
-    model.load_state_dict(torch.load(model_path + '/qsltm.pth'))
-    model.eval()
-    predictions = []
-    with torch.no_grad():
-        output = model(last_sequence)
-        new_sequence = last_sequence
-        predictions.append(output)
-        for _ in range(9):
-            new_sequence = preprocess.create_new_sequence(new_sequence, output)
-            output = model(new_sequence)
-            predictions.append(output)
+n_epochs = 15
 
-    predicted_points = torch.cat(predictions, dim=0).view(-1).numpy()
-    dummy_array = np.zeros((len(predicted_points), scaler.n_features_in_))
-    dummy_array[:, 0] = predicted_points  # Assuming target variable is the first feature
+best_stocks = ['NVDA', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'GOOGL', 'AMZN',
+               'MSFT', 'AAPL', 'ABBV', 'PEP', 'CRM', 'PFE', 'NFLX', 'AMD']
 
-    # Apply inverse transform to the dummy array
-    denormalized_predictions = scaler.inverse_transform(dummy_array)[:, 0].flatten()
+# best_stocks = ['NVDA']
 
-    return denormalized_predictions
-
-
-def test_model(model, test_loader, loss_function, scaler):
-    model.load_state_dict(torch.load(model_path + '/qsltm.pth'))
-    model.eval()  # Set the model to evaluation mode
-    test_loss = 0
-    predictions = []
-
-    with torch.no_grad():  # No need to track gradients during testing
-        for X_batch, y_batch in test_loader:
-            output = model(X_batch)
-            loss = loss_function(output, y_batch)
-            test_loss += loss.item()
-            predictions.append(output)
-
-    # Convert predictions to numpy
-    predicted_points = torch.cat(predictions, dim=0).view(-1).numpy()
-
-    # Prepare a dummy array with the correct shape
-    dummy_array = np.zeros((len(predicted_points), scaler.n_features_in_))
-    dummy_array[:, 0] = predicted_points  # Assuming target variable is the first feature
-
-    # Apply inverse transform to the dummy array
-    denormalized_predictions = scaler.inverse_transform(dummy_array)[:, 0].flatten()
-
-    avg_test_loss = test_loss / len(test_loader)
-    print(f"Test Loss: {avg_test_loss:.4f}")
-    return denormalized_predictions, avg_test_loss
-
-
-n_epochs = 1
-
-# best_stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'GOOGL', 'AMZN',
-#                'MSFT', 'AAPL', 'ABBV', 'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C',
-#                'MU']
-
-best_stocks = ['NVDA']
-
-plots = '../plots/qlstm_10'
-if not os.path.exists(plots):
-    os.makedirs(plots)
-
-for stock in best_stocks:
+for i, stock in enumerate(best_stocks):
     data_path = f'../datasets/stock_data/{stock}.csv'
     train_loader, test_loader, batch_size, scaler = preprocess.get_loaders(data_path)
+
+    print(f'{stock} in training: {i+1}/{len(best_stocks)}')
 
     # Training the model
     train_model(model, train_loader, loss_function, optimizer, n_epochs)
-
-for stock in best_stocks:
-    data_path = f'../datasets/stock_data/{stock}.csv'
-    train_loader, test_loader, batch_size, scaler = preprocess.get_loaders(data_path)
-
-    # Testing the model
-    predicted_points, avg_test_loss = test_model(model, test_loader, loss_function, scaler)
-    predicted_points_np = predicted_points.tolist()
-
-    last_sequence = torch.tensor(
-        [[ 0.9600],
-         [ 0.9908],
-         [ 0.9814],
-         [ 1.0000],
-         [ 0.9763],
-         [ 0.9136],
-         [ 0.8656],
-         [ 0.8894],
-         [ 0.8679],
-         [ 0.8842]])
-    last_sequence = last_sequence.reshape(-1, 10, 1)
-    predicted_10_points = test_model_10day(model, last_sequence, scaler)
-
-    # Plotting
-    # Load the entire dataset (x and y values)
-    data = pd.read_csv(data_path)
-    data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
-
-    # Convert 'Time' to the format matplotlib requires
-    x_values = mdates.date2num(data['Time'].values)
-    y_values = data['Close'].values
-
-    # Calculate the starting index for test data
-    num_train_batches = len(train_loader)
-    train_data_length = batch_size * num_train_batches
-
-    # difference between actual and predicted points
-    x_test_area = x_values[train_data_length:train_data_length + len(predicted_points)]
-    y_test_area = y_values[train_data_length:train_data_length + len(predicted_points)]  # müssen hier richtigen Bereich auswählen
-
-    baseline_points = []
-    for i in y_values[train_data_length - 1:train_data_length + len(predicted_points)]:
-        baseline_points.append(i)
-    baseline_points = baseline_points[:-1]
-
-    baseline_loss = loss_function(torch.tensor(baseline_points), torch.tensor(y_test_area))
-
-    print(f"Baseline Loss: {baseline_loss:.4f}")
-
-    # Plot the entire actual data
-    plt.plot(x_values, y_values, '-', label='Actual')
-
-    # Plot the predicted points for the test data
-    plt.plot(x_values[train_data_length:train_data_length + len(predicted_points)],
-                predicted_points,
-                color='red',
-                label='Predicted')
-
-    # Plot the baseline
-    plt.plot(x_values[train_data_length:train_data_length + len(predicted_points)],
-                baseline_points,
-                color='yellow',
-                label='Baseline')
-
-    # Set the locator and formatter for the x-axis
-    locator = mdates.AutoDateLocator(minticks=3, maxticks=10)
-    formatter = mdates.ConciseDateFormatter(locator)
-    plt.gca().xaxis.set_major_locator(locator)
-    plt.gca().xaxis.set_major_formatter(formatter)
-
-    plt.title(f'{stock} Stock Prediction')
-    plt.xlabel('Time Steps')
-    plt.ylabel('Price')
-    plt.legend()
-
-    plt.savefig(plots + f'/{stock}.png', dpi=300, format='png', bbox_inches='tight')
-
-    plt.show()
-
-# Plot 10 days from 30-11-2023
-
-    data = pd.read_csv('../datasets/stock_data_10_days/NVDA.csv')
-    data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
-    x_values = data['Time'].values
-    y_values = data['Close'].values
-
-    plt.plot(x_values, y_values, '-', label='Actual')
-
-    plt.plot(x_values,
-             predicted_10_points,
-             color='red',
-             label='Predicted')
-
-    # Set the locator and formatter for the x-axis
-    locator = mdates.AutoDateLocator(minticks=3, maxticks=10)
-    formatter = mdates.ConciseDateFormatter(locator)
-    plt.gca().xaxis.set_major_locator(locator)
-    plt.gca().xaxis.set_major_formatter(formatter)
-
-    plt.title(f'{stock} Stock Prediction')
-    plt.xlabel('Time Steps')
-    plt.ylabel('Price')
-    plt.legend()
-
-    plt.savefig(plots + f'/{stock}_10.png', dpi=300, format='png', bbox_inches='tight')
-
-    plt.show()
