@@ -1,9 +1,6 @@
 import os
 
-import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -68,7 +65,7 @@ for i, stock in enumerate(best_stocks):
     data_path = f'../datasets/stock_data/{stock}.csv'
     train_loader, test_loader, batch_size, scaler = preprocess.get_loaders(data_path)
 
-    print(f'{stock} in training: {i+1}/{len(best_stocks)}')
+    print(f'\n{stock} in training: {i+1}/{len(best_stocks)}')
 
     # Training the model
     train_model(model, train_loader, loss_function, optimizer, n_epochs)

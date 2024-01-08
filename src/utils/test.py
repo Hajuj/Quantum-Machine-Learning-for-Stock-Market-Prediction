@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-import torch.optim as optim
 
 import preprocess
 from src.models.lstm import LSTM
@@ -103,25 +102,13 @@ for i, stock in enumerate(best_stocks):
     data_path = f'../datasets/stock_data/{stock}.csv'
     train_loader, test_loader, batch_size, scaler = preprocess.get_loaders(data_path)
 
-    print(f'Tested stock: {stock}, {i+1}/{len(best_stocks)}')
+    print(f'Tested stock: {stock}, {i + 1}/{len(best_stocks)}')
 
     # Testing the model
     predicted_points, avg_test_loss = test_model(model, test_loader, loss_function, scaler)
     predicted_points_np = predicted_points.tolist()
 
     last_sequence = preprocess.get_last_sequence(data_path)
-    # torch.tensor(
-    #     [[0.9600],
-    #      [0.9908],
-    #      [0.9814],
-    #      [1.0000],
-    #      [0.9763],
-    #      [0.9136],
-    #      [0.8656],
-    #      [0.8894],
-    #      [0.8679],
-    #      [0.8842]])
-
     predicted_10_points = test_model_10day(model, last_sequence, scaler)
 
     # Plotting
@@ -148,7 +135,7 @@ for i, stock in enumerate(best_stocks):
 
     baseline_loss = loss_function(torch.tensor(baseline_points), torch.tensor(y_test_area))
 
-    print(f"Baseline Loss: {baseline_loss:.4f}")
+    print(f"Baseline Loss: {baseline_loss:.4f}\n")
 
     # Plot the entire actual data
     plt.plot(x_values, y_values, '-', label='Actual')
