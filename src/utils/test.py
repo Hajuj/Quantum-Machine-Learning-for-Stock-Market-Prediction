@@ -110,8 +110,6 @@ for i, stock in enumerate(best_stocks):
     predicted_points_np = predicted_points.tolist()
 
     last_sequence = preprocess.get_last_sequence(data_path)
-    predicted_10_points = test_model_10day(model, last_sequence, scaler)
-
     # torch.tensor(
     #     [[0.9600],
     #      [0.9908],
@@ -123,6 +121,8 @@ for i, stock in enumerate(best_stocks):
     #      [0.8894],
     #      [0.8679],
     #      [0.8842]])
+
+    predicted_10_points = test_model_10day(model, last_sequence, scaler)
 
     # Plotting
     # Load the entire dataset (x and y values)
@@ -182,7 +182,7 @@ for i, stock in enumerate(best_stocks):
 
 # Plot 10 days from 30-11-2023
 
-    data = pd.read_csv('../datasets/stock_data_10_days/NVDA.csv')
+    data = pd.read_csv(f'../datasets/stock_data_10_days/{stock}.csv')
     data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
     x_values = data['Time'].values
     y_values = data['Close'].values
