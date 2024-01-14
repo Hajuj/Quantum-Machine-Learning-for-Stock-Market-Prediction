@@ -54,10 +54,11 @@ def train_model(model, train_loader, loss_function, optimizer, n_epochs):
     torch.save(model.state_dict(), model_path + '/qsltm.pth')
 
 
-n_epochs = 15
+n_epochs = 20
 
-best_stocks = ['NVDA', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'GOOGL', 'AMZN',
-               'MSFT', 'AAPL', 'ABBV', 'PEP', 'CRM', 'PFE', 'NFLX', 'AMD']
+best_stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'GOOGL', 'AMZN',
+               'MSFT', 'AAPL', 'ABBV', 'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C',
+               'MU']
 
 # best_stocks = ['NVDA']
 

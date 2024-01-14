@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, max_error
 
 
 def evaluate_results(actual, predicted, stock, model):
@@ -11,10 +11,10 @@ def evaluate_results(actual, predicted, stock, model):
 
     mse = mean_squared_error(actual, predicted)
     mae = mean_absolute_error(actual, predicted)
-    rmse = np.sqrt(mse)
+    me = max_error(actual, predicted)
 
-    metrics_names = ['MSE', 'MAE', 'RMSE']
-    metrics_values = [mse, mae, rmse]
+    metrics_names = ['MSE', 'MAE', 'ME']
+    metrics_values = [mse, mae, me]
 
     plt.figure(figsize=(8, 5))
     bars = plt.bar(metrics_names, metrics_values, width=0.3, color=['blue', 'green', 'orange'])
