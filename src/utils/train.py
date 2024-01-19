@@ -37,6 +37,8 @@ if not os.path.exists(model_path):
 
 
 def train_model(model, train_loader, loss_function, optimizer, n_epochs):
+    small_difference_count = 0
+    avg_loss = 0
     for epoch in range(n_epochs):
         model.train()  # Set the model to training mode
         total_loss = 0
@@ -47,6 +49,13 @@ def train_model(model, train_loader, loss_function, optimizer, n_epochs):
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
+        if abs(avg_loss - total_loss / len(train_loader)) < 0.001:
+            small_difference_count = small_difference_count + 1
+        if small_difference_count >= 5:
+            avg_loss = total_loss / len(train_loader)
+            print(f"Epoch {epoch + 1}/{n_epochs}, Loss: {avg_loss:.4f}")
+            print(f"Stopped training in epoch {epoch + 1} due to too little loss changes")
+            break
 
         avg_loss = total_loss / len(train_loader)
         print(f"Epoch {epoch + 1}/{n_epochs}, Loss: {avg_loss:.4f}")
