@@ -33,13 +33,13 @@ model_name = 'QLSTM'  # needed for evaluation
 
 loss_function = nn.MSELoss()
 
-model_path = f'../trained_model/qlstm'
+model_path = f'../trained_model/{model_name}'
 if not os.path.exists(model_path):
     os.makedirs(model_path)
 
 
 def test_model_10day(model, last_sequence, scaler):
-    model.load_state_dict(torch.load(model_path + '/qsltm.pth'))
+    model.load_state_dict(torch.load(model_path + f'/{model_name}.pth'))
     model.eval()
     predictions = []
     with torch.no_grad():
@@ -62,7 +62,7 @@ def test_model_10day(model, last_sequence, scaler):
 
 
 def test_model(model, test_loader, loss_function, scaler):
-    model.load_state_dict(torch.load(model_path + '/qsltm.pth'))
+    model.load_state_dict(torch.load(model_path + f'/{model_name}.pth'))
     model.eval()  # Set the model to evaluation mode
     test_loss = 0
     predictions = []
@@ -95,16 +95,15 @@ best_stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM',
 
 # best_stocks = ['NVDA']
 
-plots = '../plots/qlstm_10'
-if not os.path.exists(plots):
-    os.makedirs(plots)
-
-
 for i, stock in enumerate(best_stocks):
     data_path = f'../datasets/stock_data/{stock}.csv'
     train_loader, test_loader, batch_size, scaler = preprocess.get_loaders(data_path)
 
-    print(f'Tested stock: {stock}, {i + 1}/{len(best_stocks)}')
+    plots = f'../plots/{model_name}/{stock}'
+    if not os.path.exists(plots):
+        os.makedirs(plots)
+
+    print(f'\nTested stock: {stock}, {i + 1}/{len(best_stocks)}')
 
     # Testing the model
     predicted_points, avg_test_loss = test_model(model, test_loader, loss_function, scaler)
@@ -121,6 +120,7 @@ for i, stock in enumerate(best_stocks):
     # Convert 'Time' to the format matplotlib requires
     x_values = mdates.date2num(data['Time'].values)
     y_values = data['Close'].values
+    percentage_changes = data['Percentage Change']
 
     # Calculate the starting index for test data
     num_train_batches = len(train_loader)
@@ -128,11 +128,16 @@ for i, stock in enumerate(best_stocks):
 
     # difference between actual and predicted points
     x_test_area = x_values[train_data_length:train_data_length + len(predicted_points)]
-    y_test_area = y_values[train_data_length:train_data_length + len(predicted_points)]  # müssen hier richtigen Bereich auswählen
+    y_test_area = y_values[train_data_length:train_data_length + len(predicted_points)]
+
+    last_actual_value = y_values[train_data_length - 1]
+    test_percentage_changes = percentage_changes[train_data_length:train_data_length + len(predicted_points)]
+    accuracy_score = evaluation.calculate_accuracy_score(test_percentage_changes, predicted_points, last_actual_value)
+    print(f"{accuracy_score * 100} % of trend predictions were correct for stock {stock}")
 
     baseline_points = []
-    for i in y_values[train_data_length - 1:train_data_length + len(predicted_points)]:
-        baseline_points.append(i)
+    for j in y_values[train_data_length - 1:train_data_length + len(predicted_points)]:
+        baseline_points.append(j)
     baseline_points = baseline_points[:-1]
 
     # baseline_loss = loss_function(torch.tensor(baseline_points), torch.tensor(y_test_area))
@@ -143,7 +148,7 @@ for i, stock in enumerate(best_stocks):
     plt.plot(x_values, y_values, '-', label='Actual')
 
     # Plot the predicted points for the test data
-    plt.plot(x_values[train_data_length:train_data_length + len(predicted_points)],
+    plt.plot(x_test_area,
                 predicted_points,
                 color='red',
                 label='Predicted')
@@ -165,7 +170,7 @@ for i, stock in enumerate(best_stocks):
     plt.ylabel('Price')
     plt.legend()
 
-    plt.savefig(plots + f'/{stock}.png', dpi=300, format='png', bbox_inches='tight')
+    plt.savefig(plots + '/1day.png', dpi=300, format='png', bbox_inches='tight')
 
     plt.show()
 
@@ -194,7 +199,7 @@ for i, stock in enumerate(best_stocks):
     plt.ylabel('Price')
     plt.legend()
 
-    plt.savefig(plots + f'/{stock}_10.png', dpi=300, format='png', bbox_inches='tight')
+    plt.savefig(plots + '/10day.png', dpi=300, format='png', bbox_inches='tight')
 
     plt.show()
 

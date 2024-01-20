@@ -32,5 +32,47 @@ def evaluate_results(actual, predicted, stock, model):
     # Remove x-axis values
     plt.xticks([])
 
-    plt.savefig(plots + f'/{stock}.png', dpi=300, format='png')
+    plt.savefig(plots + f'/{stock}/test_loss.png', dpi=300, format='png')
     plt.show()
+
+
+def show_loss_curve(epochs, loss_values, stock, model):
+    plots = f'../plots/evaluation/{model}/{stock}'
+    if not os.path.exists(plots):
+        os.makedirs(plots)
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(epochs, loss_values, marker='o', color='red', label='Loss Curve')
+    plt.title(f'Loss Curve for stock {stock} ({model})')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss Value')
+    plt.legend()
+
+    plt.savefig(plots + f'/loss_curve_training.png', dpi=300, format='png')
+    plt.show()
+
+
+def calculate_accuracy_score(percentage_changes, predicted_points, last_actual_value):
+
+    if len(percentage_changes) != len(predicted_points):
+        raise ValueError("Input arrays must have the same length")
+
+    correct_predictions = 0
+    total_predictions = len(predicted_points)
+
+    actual_trends = np.sign(percentage_changes).values
+
+    changes = [predicted_points[0] - last_actual_value]
+    for i in range(1, len(predicted_points)):
+        change = predicted_points[i] - predicted_points[i - 1]
+        changes.append(change)
+
+    predicted_trends = np.sign(changes)
+
+    for i in range(len(predicted_points)):
+        if predicted_trends[i] == actual_trends[i]:
+            correct_predictions += 1
+
+    return correct_predictions / total_predictions
+
+
