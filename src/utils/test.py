@@ -12,6 +12,8 @@ import evaluation
 from src.models.lstm import LSTM
 from src.models.qlstm import QLSTM
 from src.models.qrnn import QRNN
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
 
 # Set the seed for reproducibility
 seed = 42
@@ -135,10 +137,28 @@ for i, stock in enumerate(best_stocks):
     accuracy_score = evaluation.calculate_accuracy_score(test_percentage_changes, predicted_points, last_actual_value)
     print(f"{accuracy_score * 100} % of trend predictions were correct for stock {stock}")
 
-    baseline_points = []
-    for j in y_values[train_data_length - 1:train_data_length + len(predicted_points)]:
-        baseline_points.append(j)
-    baseline_points = baseline_points[:-1]
+    # Baseline using precious day as todays prediction
+
+    # baseline_points = []
+    # for j in y_values[train_data_length - 1:train_data_length + len(predicted_points)]:
+    #     baseline_points.append(j)
+    # baseline_points = baseline_points[:-1]
+
+    #Baseline using Linear Regression
+
+    closing_price = data['Close']
+
+    date_ordinal = data['Time'].apply(lambda x: x.toordinal())
+
+    date_ordinal_reshaped = np.array(date_ordinal).reshape(-1, 1)
+    closing_price_reshaped = np.array(closing_price)
+    reg = LinearRegression()
+    reg.fit(date_ordinal_reshaped, closing_price_reshaped)
+    baseline_points = reg.predict(date_ordinal_reshaped)
+
+    # Mean Squared Error for the Baseline(Linear Regression)
+    mse = mean_squared_error(closing_price_reshaped, baseline_points)
+    print(f'MSE - Baseline: {mse}')
 
     # baseline_loss = loss_function(torch.tensor(baseline_points), torch.tensor(y_test_area))
 
@@ -154,10 +174,10 @@ for i, stock in enumerate(best_stocks):
                 label='Predicted')
 
     # Plot the baseline
-    # plt.plot(x_values[train_data_length:train_data_length + len(predicted_points)],
-    #             baseline_points,
-    #             color='yellow',
-    #             label='Baseline')
+    plt.plot(data['Time'],
+                baseline_points,
+                color='green',
+                label='Baseline')
 
     # Set the locator and formatter for the x-axis
     locator = mdates.AutoDateLocator(minticks=3, maxticks=10)
