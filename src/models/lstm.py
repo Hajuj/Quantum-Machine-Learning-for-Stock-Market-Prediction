@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -44,3 +45,13 @@ class LSTM(nn.Module):
         out, _ = self.lstm(x, (h0, c0))
         out = self.fc(out[:, -1, :])
         return out
+
+
+if __name__ == '__main__':
+    lstm = LSTM(2, 1, 1)
+    for parameter in lstm.parameters():
+        print(parameter)
+
+    model_parameters = filter(lambda p: p.requires_grad, lstm.parameters())
+    params = sum([np.prod(p.size()) for p in model_parameters])
+    print(params)
