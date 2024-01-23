@@ -19,7 +19,7 @@ torch.manual_seed(seed)
 np.random.seed(seed)
 
 # Initialize the model
-input_size = 1
+input_size = 2
 hidden_size = 1
 n_qubits = 4
 n_qlayers = 2
@@ -93,7 +93,7 @@ best_stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM',
                'MSFT', 'AAPL', 'ABBV', 'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C',
                'MU']
 
-# best_stocks = ['NVDA']
+best_stocks = ['NVDA']
 
 plots = '../plots/qlstm_10'
 if not os.path.exists(plots):
@@ -111,7 +111,7 @@ for i, stock in enumerate(best_stocks):
     predicted_points_np = predicted_points.tolist()
 
     last_sequence = preprocess.get_last_sequence(data_path)
-    predicted_10_points = test_model_10day(model, last_sequence, scaler)
+    # predicted_10_points = test_model_10day(model, last_sequence, scaler)
 
     # Plotting
     # Load the entire dataset (x and y values)
@@ -128,7 +128,7 @@ for i, stock in enumerate(best_stocks):
 
     # difference between actual and predicted points
     x_test_area = x_values[train_data_length:train_data_length + len(predicted_points)]
-    y_test_area = y_values[train_data_length:train_data_length + len(predicted_points)]  # müssen hier richtigen Bereich auswählen
+    y_test_area = y_values[train_data_length:train_data_length + len(predicted_points)]
 
     baseline_points = []
     for i in y_values[train_data_length - 1:train_data_length + len(predicted_points)]:
@@ -171,33 +171,33 @@ for i, stock in enumerate(best_stocks):
 
 # Plot 10 days from 30-11-2023
 
-    data = pd.read_csv(f'../datasets/stock_data_10_days/{stock}.csv')
-    data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
-    x_values = data['Time'].values
-    y_values = data['Close'].values
-
-    plt.plot(x_values, y_values, '-', label='Actual')
-
-    plt.plot(x_values,
-             predicted_10_points,
-             color='red',
-             label='Predicted')
-
-    # Set the locator and formatter for the x-axis
-    locator = mdates.AutoDateLocator(minticks=3, maxticks=10)
-    formatter = mdates.ConciseDateFormatter(locator)
-    plt.gca().xaxis.set_major_locator(locator)
-    plt.gca().xaxis.set_major_formatter(formatter)
-
-    plt.title(f'{stock} Stock Prediction')
-    plt.xlabel('Time Steps')
-    plt.ylabel('Price')
-    plt.legend()
-
-    plt.savefig(plots + f'/{stock}_10.png', dpi=300, format='png', bbox_inches='tight')
-
-    plt.show()
-
-    # Evaluation
-
-    evaluation.evaluate_results(y_values, predicted_10_points, stock, model_name)
+    # data = pd.read_csv(f'../datasets/stock_data_10_days/{stock}.csv')
+    # data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
+    # x_values = data['Time'].values
+    # y_values = data['Close'].values
+    #
+    # plt.plot(x_values, y_values, '-', label='Actual')
+    #
+    # plt.plot(x_values,
+    #          predicted_10_points,
+    #          color='red',
+    #          label='Predicted')
+    #
+    # # Set the locator and formatter for the x-axis
+    # locator = mdates.AutoDateLocator(minticks=3, maxticks=10)
+    # formatter = mdates.ConciseDateFormatter(locator)
+    # plt.gca().xaxis.set_major_locator(locator)
+    # plt.gca().xaxis.set_major_formatter(formatter)
+    #
+    # plt.title(f'{stock} Stock Prediction')
+    # plt.xlabel('Time Steps')
+    # plt.ylabel('Price')
+    # plt.legend()
+    #
+    # plt.savefig(plots + f'/{stock}_10.png', dpi=300, format='png', bbox_inches='tight')
+    #
+    # plt.show()
+    #
+    # # Evaluation
+    #
+    # evaluation.evaluate_results(y_values, predicted_10_points, stock, model_name)

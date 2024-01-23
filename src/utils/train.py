@@ -16,7 +16,7 @@ torch.manual_seed(seed)
 np.random.seed(seed)
 
 # Initialize the model
-input_size = 1
+input_size = 2
 hidden_size = 1
 n_qubits = 4
 n_qlayers = 2
@@ -54,12 +54,12 @@ def train_model(model, train_loader, loss_function, optimizer, n_epochs):
     torch.save(model.state_dict(), model_path + '/qsltm.pth')
 
 
-n_epochs = 15
+n_epochs = 5
 
 best_stocks = ['NVDA', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'GOOGL', 'AMZN',
                'MSFT', 'AAPL', 'ABBV', 'PEP', 'CRM', 'PFE', 'NFLX', 'AMD']
 
-# best_stocks = ['NVDA']
+best_stocks = ['NVDA']
 
 for i, stock in enumerate(best_stocks):
     data_path = f'../datasets/stock_data/{stock}.csv'
