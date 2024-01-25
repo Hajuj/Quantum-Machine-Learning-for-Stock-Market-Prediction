@@ -35,7 +35,7 @@ model = models[model_name]
 arch = "1"
 
 # Loss function and optimizer and scheduler
-n_epochs = 3
+n_epochs = 50
 loss_function = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.03)
 scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=(0.1 * 1 / 3), total_iters=n_epochs,
@@ -85,7 +85,6 @@ def train_model(model, train_loader, loss_function, optimizer, seed, n_epochs):
 
         epochs.append(epoch + 1)
         loss_values.append(avg_loss)
-        print(f"Epoch {epoch + 1}/{n_epochs}, Loss: {avg_loss:.4f}")
 
     return epochs, avg_loss
 
@@ -122,6 +121,8 @@ for seed in range(1, 6):
 
                 # Training the model
                 epochs, avg_loss = train_model(model, train_loader, loss_function, optimizer, seed, n_epochs=1)
+
+                print(f"Epoch {epoch + 1}/{n_epochs}, Loss: {avg_loss:.4f}")
 
                 # Save stats
                 csv_writer.writerow([epoch + 1, stock, avg_loss, model_name, arch, n_qlayers, scheduler.get_last_lr()[0], lookback, batch_size, n_epochs, seed])
