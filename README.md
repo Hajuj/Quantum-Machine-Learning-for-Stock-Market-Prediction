@@ -14,8 +14,8 @@ This project explores the application of Quantum Machine Learning (QML) in the f
   - **Technical Indicator:** A mathematical calculation based on historical price, volume, or open interest information that aims to forecast financial market directions.
 - **Evaluation on PennyLane and IBM-Q:** Testing and validation of models on PennyLane simulators and real quantum hardware provided by IBM-Q.
 
-## Contributors
-Here you can find our [Wiki](https://gitlab.lrz.de/mobile-ifi/qcp/23ws/quantum_finance_basf/-/wikis/Papers).
+## Resources
+Here you can find our [Wiki](https://gitlab.lrz.de/mobile-ifi/qcp/23ws/quantum_finance_basf/-/wikis/Papers) with some related work on the topic.
 ## Contributors
 - Alexander Kovacs @akovacs
 - Florian Eckstaller @00000000013586DE
