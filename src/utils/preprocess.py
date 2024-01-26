@@ -15,31 +15,49 @@ np.set_printoptions(threshold=sys.maxsize)
 torch.set_printoptions(threshold=10_000)
 
 
-def load_and_clean_data(file_path):
+def load_and_clean_data(file_path, file_path_income):
     """Load dataset and select relevant columns."""
     data = pd.read_csv(file_path, index_col='Time', parse_dates=True)
-    data = data[['Close', 'Volume']]
+    df = pd.read_csv(file_path_income, index_col='Time', parse_dates=True)
+    df = df['2021-08-30':]
+    data = pd.concat([data, df], axis=1)
+    data = data[['Close', 'Volume', 'Percentage Change', 'totalRevenue']]
     data['Close'] = pd.to_numeric(data['Close'], errors='coerce')
     data['Volume'] = pd.to_numeric(data['Volume'], errors='coerce')
+    data['Percentage Change'] = pd.to_numeric(data['Percentage Change'], errors='coerce')
+    data['totalRevenue'] = pd.to_numeric(data['totalRevenue'], errors='coerce')
+    data.reset_index(drop=True, inplace=True)
 
-    target_sensor = "Close"
     features = list(data.columns)
 
+    first_values = data.iloc[0, 0:]
+    row_last = first_values
+
+    for i, row in data.iterrows():
+        for feature, value in enumerate(row):
+            feature = features[feature]
+            if value != value:
+                value = row_last[feature]
+            row_last[feature] = value
+            data[feature][i] = value
+
+    target_sensor = "Close"
     forecast_lead = 1
     target = f"{target_sensor}_pred{forecast_lead}"
 
-    data[target] = data[target_sensor].shift(-forecast_lead)
+    data[target] = data[target_sensor].shift(forecast_lead)
     data[target] = pd.to_numeric(data[target], errors='coerce')
 
     data = data.iloc[:-forecast_lead]
+    data.dropna(inplace=True)
+
     return data, target, features
 
 
-def split_and_scale_data(data):
-    train_end = '2023-04-30'
-    test_start = '2023-05-01'
-    df_train = data.loc[:train_end].copy()
-    df_test = data.loc[test_start:].copy()
+def split_and_scale_data(data, train_ratio):
+    split_index = int(len(data) * train_ratio)
+    df_train = data.loc[:split_index].copy()
+    df_test = data.loc[split_index:].copy()
 
     scaler = MinMaxScaler(feature_range=(-1, 1))
     np_train = scaler.fit_transform(df_train)
@@ -106,13 +124,13 @@ class SequenceDataset(Dataset):
         return x, self.y[i]
 
 
-def get_loaders(data_path):
+def get_loaders(data_path, data_path2):
     sequence_length = 10
     batch_size = 16
 
     # Data preparation
-    data, target, features = load_and_clean_data(data_path)
-    scaled_train_data, scaled_test_data, scaler = split_and_scale_data(data)
+    data, target, features = load_and_clean_data(data_path, data_path2)
+    scaled_train_data, scaled_test_data, scaler = split_and_scale_data(data, 0.7)
 
     # shifted_df = prepare_dataframe_for_lstm(data, sequence_length)
     # shifted_df_as_np, scaler = scale_data(shifted_df.to_numpy())

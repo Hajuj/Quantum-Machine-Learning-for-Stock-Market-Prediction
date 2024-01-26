@@ -16,7 +16,7 @@ torch.manual_seed(seed)
 np.random.seed(seed)
 
 # Initialize the model
-input_size = 2
+input_size = 4
 hidden_size = 1
 n_qubits = 4
 n_qlayers = 2
@@ -63,7 +63,8 @@ best_stocks = ['NVDA']
 
 for i, stock in enumerate(best_stocks):
     data_path = f'../datasets/stock_data/{stock}.csv'
-    train_loader, test_loader, batch_size, scaler = preprocess.get_loaders(data_path)
+    data_path_income = f'../datasets/stock_data/{stock}_Income.csv'
+    train_loader, test_loader, batch_size, scaler = preprocess.get_loaders(data_path, data_path_income)
 
     print(f'\n{stock} in training: {i+1}/{len(best_stocks)}')
 
