@@ -1,6 +1,6 @@
 import os
 import csv
-import datetime
+from datetime import datetime
 
 import numpy as np
 import torch
@@ -105,7 +105,7 @@ for seed in range(1, 6):
     print(f"\nTraining with seed: {seed}")
 
     # Create CSV file
-    timestamp = datetime.datetime.now()
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     file_name = f"{model_name}_seed{seed}_{timestamp}.csv"
     file_path = os.path.join(results_dir, file_name)
 
