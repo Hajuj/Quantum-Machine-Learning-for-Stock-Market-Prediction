@@ -91,13 +91,12 @@ def test_model(model, test_loader, loss_function, scaler):
     return denormalized_predictions, avg_test_loss
 
 
-best_stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'GOOGL', 'AMZN',
-               'MSFT', 'AAPL', 'ABBV', 'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C',
-               'MU']
+stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
+          'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
 
-# best_stocks = ['NVDA']
+# stocks = ['NVDA']
 
-for i, stock in enumerate(best_stocks):
+for i, stock in enumerate(stocks):
     data_path = f'../datasets/stock_data/{stock}.csv'
     train_loader, test_loader, batch_size, scaler = preprocess.get_loaders(data_path)
 
@@ -105,7 +104,7 @@ for i, stock in enumerate(best_stocks):
     if not os.path.exists(plots):
         os.makedirs(plots)
 
-    print(f'\nTested stock: {stock}, {i + 1}/{len(best_stocks)}')
+    print(f'\nTested stock: {stock}, {i + 1}/{len(stocks)}')
 
     # Testing the model
     predicted_points, avg_test_loss = test_model(model, test_loader, loss_function, scaler)

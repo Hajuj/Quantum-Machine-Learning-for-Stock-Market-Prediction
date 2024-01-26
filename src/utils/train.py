@@ -14,10 +14,6 @@ from src.models.lstm import LSTM
 from src.models.qlstm import QLSTM
 from src.models.qrnn import QRNN
 
-# # Set the seed for reproducibility
-# seed = 42
-# torch.manual_seed(seed)
-# np.random.seed(seed)
 
 # Model parameters
 input_size = 1
@@ -52,7 +48,7 @@ if not os.path.exists(results_dir):
     os.makedirs(results_dir)
 
 
-def train_model(model, train_loader, loss_function, optimizer, seed, n_epochs):
+def train_model(model, train_loader, loss_function, optimizer, n_epochs):
     """Train the model and return epoch and loss data."""
     small_difference_count, avg_loss = 0, 0
     epochs, loss_values = [], []
@@ -81,12 +77,19 @@ def train_model(model, train_loader, loss_function, optimizer, seed, n_epochs):
         #     break
 
         avg_loss = current_avg_loss
-        # scheduler.step(avg_loss)  # Update the scheduler
 
         epochs.append(epoch + 1)
         loss_values.append(avg_loss)
 
     return epochs, avg_loss
+
+
+def save_model(model, seed, timestamp):
+    """Save the trained model"""
+    model_save_path = os.path.join(model_path, f"{model_name}_arch{arch}_seed{seed}_qlayer{n_qlayers}_{timestamp}.pth")
+    torch.save(model.state_dict(), model_save_path)
+
+    return model_save_path
 
 
 stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
@@ -120,9 +123,9 @@ for seed in range(1, 6):
                 print(f'\n{stock} in training: {i + 1}/{len(stocks)}')
 
                 # Training the model
-                epochs, avg_loss = train_model(model, train_loader, loss_function, optimizer, seed, n_epochs=1)
+                epochs, avg_loss = train_model(model, train_loader, loss_function, optimizer, n_epochs=1)
 
-                print(f"Epoch {epoch + 1}/{n_epochs}, Loss: {avg_loss:.4f}")
+                print(f"Epoch {epoch + 1}/{n_epochs}, Loss: {avg_loss:.4f}, Seed: {seed}")
 
                 # Save stats
                 csv_writer.writerow([epoch + 1, stock, avg_loss, model_name, arch, n_qlayers, scheduler.get_last_lr()[0], lookback, batch_size, n_epochs, seed])
@@ -131,5 +134,4 @@ for seed in range(1, 6):
             scheduler.step()  # Update the scheduler
 
         # Save the trained model
-        model_save_path = os.path.join(model_path, f"{model_name}_arch{arch}_seed{seed}_qlayer{n_qlayers}_{timestamp}.pth")
-        torch.save(model.state_dict(), model_save_path)
+        model_saved_path = save_model(model, seed, timestamp)
