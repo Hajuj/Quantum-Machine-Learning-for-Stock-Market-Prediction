@@ -6,8 +6,6 @@ import pandas as pd
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 
-
-
 def evaluate_results(actual, predicted, stock, model):
     plots = f'../plots/evaluation/{model}'
     if not os.path.exists(plots):
@@ -143,4 +141,29 @@ def plot_accumulated_loss_curve(data_path, save_path, seed):
     plt.show()
 
 
+def plot_baseline(predictions, actual_values, time_values, stock, save_path):
+    plt.plot(time_values,
+             actual_values,
+             color='blue',
+             label='Actual')
 
+    # Plot the predicted points for the test data
+    plt.plot(time_values[10:],
+             predictions[:-10],
+             color='green',
+             label='Baseline')
+
+    # Set the locator and formatter for the x-axis
+    locator = mdates.AutoDateLocator(minticks=3, maxticks=10)
+    formatter = mdates.ConciseDateFormatter(locator)
+    plt.gca().xaxis.set_major_locator(locator)
+    plt.gca().xaxis.set_major_formatter(formatter)
+
+    plt.title(f'{stock} Stock Prediction')
+    plt.xlabel('Time Steps')
+    plt.ylabel('Price')
+    plt.legend()
+
+    plt.savefig(save_path + '/baseline.png', dpi=300, format='png', bbox_inches='tight')
+
+    plt.show()

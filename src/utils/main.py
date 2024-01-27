@@ -175,7 +175,6 @@ for seed in range(1, 6):
         evaluation.save_data_to_csv(predicted_points, y_test_area, x_test_area, accuracy_score, stock, constants, test_file_path)
 
         # Plot 10 days from 30-11-2023
-
         data = pd.read_csv(f'../datasets/stock_data_10_days/{stock}.csv')
         data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
         x_values = data['Time'].values
@@ -186,21 +185,17 @@ for seed in range(1, 6):
         # Save 10 day prediction to csv
 
         # Baseline using Linear Regression
+        baseline_points = baseline.get_baseline_points(test_loader, scaler)
 
-        baseline_points = baseline.get_baseline_points(data)
+        # Plotting the Baseline
+        plot.plot_baseline(baseline_points, y_test_area, x_test_area, stock, plots)
 
         # Evaluation
 
         # Loss Curve plotting
-
         plot.plot_loss_curve(train_file_path, evaluation_plot_path, stock, seed)
 
     accumulated_evaluation_path = f'../plots/evaluation/{model_name}'
     num_stocks = len(stocks)
 
     plot.plot_accumulated_loss_curve(train_file_path, accumulated_evaluation_path, seed)
-
-
-
-
-
