@@ -12,36 +12,11 @@ import evaluation
 from src.models.lstm import LSTM
 from src.models.qlstm import QLSTM
 from src.models.qrnn import QRNN
-from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 
-# Set the seed for reproducibility
-seed = 42
-torch.manual_seed(seed)
-np.random.seed(seed)
 
-# Initialize the model
-input_size = 1
-hidden_size = 1
-n_qubits = 4
-n_qlayers = 2
-
-QLSTM = QLSTM(input_size, hidden_size, n_qubits=n_qubits, n_qlayers=n_qlayers)
-QRNN = QRNN(input_size, hidden_size, n_qubits=n_qubits, n_qlayers=n_qlayers)
-LSTM = LSTM(input_size, hidden_size, 1)
-
-model = QLSTM
-model_name = 'QLSTM'  # needed for evaluation
-
-loss_function = nn.MSELoss()
-
-model_path = f'../trained_model/{model_name}'
-if not os.path.exists(model_path):
-    os.makedirs(model_path)
-
-
-def test_model_10day(model, last_sequence, scaler):
-    model.load_state_dict(torch.load(model_path + f'/{model_name}.pth'))
+def test_model_10day(model, last_sequence, scaler, model_path):
+    model.load_state_dict(torch.load(model_path))
     model.eval()
     predictions = []
     with torch.no_grad():
@@ -63,8 +38,8 @@ def test_model_10day(model, last_sequence, scaler):
     return denormalized_predictions
 
 
-def test_model(model, test_loader, loss_function, scaler):
-    model.load_state_dict(torch.load(model_path + f'/{model_name}.pth'))
+def test_model(model, test_loader, loss_function, scaler, model_path):
+    model.load_state_dict(torch.load(model_path))
     model.eval()  # Set the model to evaluation mode
     test_loss = 0
     predictions = []
@@ -91,137 +66,6 @@ def test_model(model, test_loader, loss_function, scaler):
     return denormalized_predictions, avg_test_loss
 
 
-stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
-          'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
 
-# stocks = ['NVDA']
 
-for i, stock in enumerate(stocks):
-    data_path = f'../datasets/stock_data/{stock}.csv'
-    train_loader, test_loader, batch_size, scaler = preprocess.get_loaders(data_path)
 
-    plots = f'../plots/{model_name}/{stock}'
-    if not os.path.exists(plots):
-        os.makedirs(plots)
-
-    print(f'\nTested stock: {stock}, {i + 1}/{len(stocks)}')
-
-    # Testing the model
-    predicted_points, avg_test_loss = test_model(model, test_loader, loss_function, scaler)
-    predicted_points_np = predicted_points.tolist()
-
-    last_sequence = preprocess.get_last_sequence(data_path)
-    predicted_10_points = test_model_10day(model, last_sequence, scaler)
-
-    # Plotting
-    # Load the entire dataset (x and y values)
-    data = pd.read_csv(data_path)
-    data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
-
-    # Convert 'Time' to the format matplotlib requires
-    x_values = mdates.date2num(data['Time'].values)
-    y_values = data['Close'].values
-    percentage_changes = data['Percentage Change']
-
-    # Calculate the starting index for test data
-    num_train_batches = len(train_loader)
-    train_data_length = batch_size * num_train_batches
-
-    # difference between actual and predicted points
-    x_test_area = x_values[train_data_length:train_data_length + len(predicted_points)]
-    y_test_area = y_values[train_data_length:train_data_length + len(predicted_points)]
-
-    last_actual_value = y_values[train_data_length - 1]
-    test_percentage_changes = percentage_changes[train_data_length:train_data_length + len(predicted_points)]
-    accuracy_score = evaluation.calculate_accuracy_score(test_percentage_changes, predicted_points, last_actual_value)
-    print(f"{accuracy_score * 100} % of trend predictions were correct for stock {stock}")
-
-    # Baseline using precious day as todays prediction
-
-    # baseline_points = []
-    # for j in y_values[train_data_length - 1:train_data_length + len(predicted_points)]:
-    #     baseline_points.append(j)
-    # baseline_points = baseline_points[:-1]
-
-    #Baseline using Linear Regression
-
-    closing_price = data['Close']
-
-    date_ordinal = data['Time'].apply(lambda x: x.toordinal())
-
-    date_ordinal_reshaped = np.array(date_ordinal).reshape(-1, 1)
-    closing_price_reshaped = np.array(closing_price)
-    reg = LinearRegression()
-    reg.fit(date_ordinal_reshaped, closing_price_reshaped)
-    baseline_points = reg.predict(date_ordinal_reshaped)
-
-    # Mean Squared Error for the Baseline(Linear Regression)
-    mse = mean_squared_error(closing_price_reshaped, baseline_points)
-    print(f'MSE - Baseline: {mse}')
-
-    # baseline_loss = loss_function(torch.tensor(baseline_points), torch.tensor(y_test_area))
-
-    # print(f"Baseline Loss: {baseline_loss:.4f}\n")
-
-    # Plot the entire actual data
-    plt.plot(x_values, y_values, '-', label='Actual')
-
-    # Plot the predicted points for the test data
-    plt.plot(x_test_area,
-                predicted_points,
-                color='red',
-                label='Predicted')
-
-    # Plot the baseline
-    plt.plot(data['Time'],
-                baseline_points,
-                color='green',
-                label='Baseline')
-
-    # Set the locator and formatter for the x-axis
-    locator = mdates.AutoDateLocator(minticks=3, maxticks=10)
-    formatter = mdates.ConciseDateFormatter(locator)
-    plt.gca().xaxis.set_major_locator(locator)
-    plt.gca().xaxis.set_major_formatter(formatter)
-
-    plt.title(f'{stock} Stock Prediction')
-    plt.xlabel('Time Steps')
-    plt.ylabel('Price')
-    plt.legend()
-
-    plt.savefig(plots + '/1day.png', dpi=300, format='png', bbox_inches='tight')
-
-    plt.show()
-
-# Plot 10 days from 30-11-2023
-
-    data = pd.read_csv(f'../datasets/stock_data_10_days/{stock}.csv')
-    data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
-    x_values = data['Time'].values
-    y_values = data['Close'].values
-
-    plt.plot(x_values, y_values, '-', label='Actual')
-
-    plt.plot(x_values,
-             predicted_10_points,
-             color='red',
-             label='Predicted')
-
-    # Set the locator and formatter for the x-axis
-    locator = mdates.AutoDateLocator(minticks=3, maxticks=10)
-    formatter = mdates.ConciseDateFormatter(locator)
-    plt.gca().xaxis.set_major_locator(locator)
-    plt.gca().xaxis.set_major_formatter(formatter)
-
-    plt.title(f'{stock} Stock Prediction')
-    plt.xlabel('Time Steps')
-    plt.ylabel('Price')
-    plt.legend()
-
-    plt.savefig(plots + '/10day.png', dpi=300, format='png', bbox_inches='tight')
-
-    plt.show()
-
-    # Evaluation
-
-    evaluation.evaluate_results(y_values, predicted_10_points, stock, model_name)
