@@ -3,20 +3,21 @@ import numpy as np
 from sklearn.metrics import mean_squared_error
 
 
-def get_baseline_points(data):
-    closing_price = data['Close']
-
-    date_ordinal = data['Time'].apply(lambda x: x.toordinal())
-
-    date_ordinal_reshaped = np.array(date_ordinal).reshape(-1, 1)
-    closing_price_reshaped = np.array(closing_price)
+def get_baseline_points(test_loader, scaler):
     reg = LinearRegression()
-    reg.fit(date_ordinal_reshaped, closing_price_reshaped)
-    baseline_points = reg.predict(date_ordinal_reshaped)
+    baseline_points = []
 
-    # Mean Squared Error for the Baseline(Linear Regression)
-    mse = mean_squared_error(closing_price_reshaped, baseline_points)
-    print(f'MSE - Baseline: {mse}')
+    for X_batch, y_batch in test_loader:
+        X_batch_flat = X_batch.view(X_batch.size(0), -1)
+        y_batch = y_batch.reshape(-1, 1)
 
-    return baseline_points
+        reg.fit(X_batch_flat, y_batch)
+        baseline_points.extend(reg.predict(X_batch_flat))
+
+    baseline_array = np.array(baseline_points)
+    dummy_array = np.zeros((len(baseline_array), scaler.n_features_in_))
+    dummy_array[:, 0] = baseline_array.ravel()
+    denormalized_predictions = scaler.inverse_transform(dummy_array)[:, 0].flatten()
+
+    return denormalized_predictions
 

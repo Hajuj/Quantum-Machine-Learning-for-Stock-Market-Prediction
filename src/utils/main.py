@@ -181,8 +181,11 @@ for seed in range(1, 6):
 
         # Baseline using Linear Regression
 
-        baseline_points = baseline.get_baseline_points(data)
+        baseline_points = baseline.get_baseline_points(test_loader, scaler)
 
+        # Plotting the Baseline
+
+        plot.plot_baseline(baseline_points, y_test_area, x_test_area, stock, plots)
 
         # Evaluation
 
