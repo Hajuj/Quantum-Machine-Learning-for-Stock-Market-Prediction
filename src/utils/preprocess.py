@@ -6,6 +6,7 @@ import torch
 from sklearn.preprocessing import MinMaxScaler
 from torch.utils.data import Dataset, DataLoader
 
+
 # Set the seed for reproducibility
 seed = 42
 torch.manual_seed(seed)

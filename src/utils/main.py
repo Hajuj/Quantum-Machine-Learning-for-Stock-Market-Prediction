@@ -9,12 +9,12 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 
-import baseline
 import evaluation
 import plot
 import preprocess
 import test
 import train
+from src.models import baseline
 from src.models.lstm import LSTM
 from src.models.qlstm import QLSTM
 from src.models.qrnn import QRNN
