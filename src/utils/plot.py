@@ -6,8 +6,6 @@ import pandas as pd
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 
-
-
 def evaluate_results(actual, predicted, stock, model):
     plots = f'../plots/evaluation/{model}'
     if not os.path.exists(plots):
@@ -54,6 +52,7 @@ def show_loss_curve(epochs, loss_values, stock, model):
 
     plt.savefig(plots + f'/loss_curve_training.png', dpi=300, format='png')
     plt.show()
+
 
 def plot_1_day_predictions(predictions, actual_values, time_values, stock, save_path):
 
@@ -104,6 +103,43 @@ def plot_10_day_prediction(predictions, time_values, actual_values, stock, save_
     plt.savefig(save_path + '/10day.png', dpi=300, format='png', bbox_inches='tight')
 
     plt.show()
+
+
+def plot_loss_curve(data_path, save_path, stock, seed):
+    data = pd.read_csv(data_path)
+
+    loss_array = []
+    epochs = []
+
+    for index, row in data.iterrows():
+        # Check if the value in the "stock" column matches the provided stock parameter
+        if row['stock'] == stock:
+            # Append the value from the "avg_loss" column to the loss array
+            loss_array.append(row['avg_loss'])
+            epochs.append(row['epoch'])
+
+    plt.plot(epochs, loss_array)
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title(f'Loss vs Epochs for Stock: {stock}')
+
+    plt.savefig(save_path + f'/train_loss_seed_{seed}', dpi=300, format='png', bbox_inches='tight')
+    plt.show()
+
+
+def plot_accumulated_loss_curve(data_path, save_path, seed):
+    data = pd.read_csv(data_path)
+
+    avg_losses = data.groupby('epoch')['avg_loss'].mean().tolist()
+    epochs = sorted(data['epoch'].unique())
+
+    plt.plot(epochs, avg_losses)
+    plt.xlabel('Epochs')
+    plt.ylabel('Average Loss')
+    plt.title('Average Loss per Epoch')
+    plt.savefig(save_path + f'/accumulated_train_loss_seed_{seed}', dpi=300, format='png', bbox_inches='tight')
+    plt.show()
+
 
 def plot_baseline(predictions, actual_values, time_values, stock, save_path):
     plt.plot(time_values,

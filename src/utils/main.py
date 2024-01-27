@@ -60,6 +60,7 @@ if not os.path.exists(results_test_dir):
     os.makedirs(results_test_dir)
 
 
+
 stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
           'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
 
@@ -84,9 +85,9 @@ for seed in range(1, 6):
     # Create CSV file
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     file_name = f"{model_name}_seed{seed}_{timestamp}.csv"
-    file_path = os.path.join(results_train_dir, file_name)
+    train_file_path = os.path.join(results_train_dir, file_name)
 
-    with open(file_path, mode='w', newline='') as file:
+    with open(train_file_path, mode='w', newline='') as file:
         csv_writer = csv.writer(file)
         csv_writer.writerow(
             ['epoch', 'stock', 'avg_loss', 'model_name', 'arch', 'n_qlayers', 'lr', 'lookback', 'batch_size', 'n_epoch',
@@ -106,7 +107,6 @@ for seed in range(1, 6):
 
                 # Save stats
                 csv_writer.writerow([epoch + 1, stock, avg_loss, model_name, arch, n_qlayers, format(scheduler.get_last_lr()[0], '.6f'), lookback, batch_size, n_epochs, seed])
-                # evaluation.show_loss_curve(epochs, loss_values, stock, model_name)
 
             scheduler.step()  # Update the scheduler
 
@@ -119,9 +119,13 @@ for seed in range(1, 6):
         data_path = f'../datasets/stock_data/{stock}.csv'
         train_loader, test_loader, batch_size, scaler, lookback = preprocess.get_loaders(data_path)
 
-        plots = f'../plots/{model_name}/{stock}'
-        if not os.path.exists(plots):
-            os.makedirs(plots)
+        stock_plot_path = f'../plots/{model_name}/{stock}'
+        if not os.path.exists(stock_plot_path):
+            os.makedirs(stock_plot_path)
+
+        evaluation_plot_path = f'../plots/evaluation/{model_name}/{stock}'
+        if not os.path.exists(evaluation_plot_path):
+            os.makedirs(evaluation_plot_path)
 
         results = results_test_dir + f'/{stock}'
         if not os.path.exists(results):
@@ -154,7 +158,7 @@ for seed in range(1, 6):
         x_test_area = x_values[train_data_length:train_data_length + len(predicted_points)]
         y_test_area = y_values[train_data_length:train_data_length + len(predicted_points)]
 
-        plot.plot_1_day_predictions(predicted_points, y_test_area, x_test_area, stock, plots)
+        plot.plot_1_day_predictions(predicted_points, y_test_area, x_test_area, stock, stock_plot_path)
 
         # Save test data to csv
 
@@ -165,31 +169,33 @@ for seed in range(1, 6):
 
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         file_name = f"{model_name}_seed{seed}_{timestamp}.csv"
-        file_path = os.path.join(results, file_name)
+        test_file_path = os.path.join(results, file_name)
 
         constants = [model_name, arch, n_qlayers, seed, lookback, batch_size]
-        evaluation.save_data_to_csv(predicted_points, y_test_area, x_test_area, accuracy_score, stock, constants, file_path)
+        evaluation.save_data_to_csv(predicted_points, y_test_area, x_test_area, accuracy_score, stock, constants, test_file_path)
 
         # Plot 10 days from 30-11-2023
-
         data = pd.read_csv(f'../datasets/stock_data_10_days/{stock}.csv')
         data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
         x_values = data['Time'].values
         y_values = data['Close'].values
 
-        plot.plot_10_day_prediction(predicted_10_points, x_values, y_values, stock, plots)
+        plot.plot_10_day_prediction(predicted_10_points, x_values, y_values, stock, stock_plot_path)
+
+        # Save 10 day prediction to csv
 
         # Baseline using Linear Regression
-
         baseline_points = baseline.get_baseline_points(test_loader, scaler)
 
         # Plotting the Baseline
-
         plot.plot_baseline(baseline_points, y_test_area, x_test_area, stock, plots)
 
         # Evaluation
 
-        # plot.evaluate_results(y_values, predicted_10_points, stock, model_name)
+        # Loss Curve plotting
+        plot.plot_loss_curve(train_file_path, evaluation_plot_path, stock, seed)
 
+    accumulated_evaluation_path = f'../plots/evaluation/{model_name}'
+    num_stocks = len(stocks)
 
-
+    plot.plot_accumulated_loss_curve(train_file_path, accumulated_evaluation_path, seed)
