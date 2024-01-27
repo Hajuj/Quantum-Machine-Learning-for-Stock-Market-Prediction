@@ -1,18 +1,7 @@
-import os
-
-import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import torch
-import torch.nn as nn
 
 import preprocess
-import evaluation
-from src.models.lstm import LSTM
-from src.models.qlstm import QLSTM
-from src.models.qrnn import QRNN
-from sklearn.metrics import mean_squared_error
 
 
 def test_model_10day(model, last_sequence, scaler, model_path):
@@ -64,8 +53,3 @@ def test_model(model, test_loader, loss_function, scaler, model_path):
     avg_test_loss = test_loss / len(test_loader)
     print(f"Test Loss: {avg_test_loss:.4f}")
     return denormalized_predictions, avg_test_loss
-
-
-
-
-

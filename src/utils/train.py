@@ -1,4 +1,3 @@
-
 def train_model(model, train_loader, loss_function, optimizer, n_epochs):
     """Train the model and return epoch and loss data."""
     small_difference_count, avg_loss = 0, 0
@@ -33,8 +32,3 @@ def train_model(model, train_loader, loss_function, optimizer, n_epochs):
         loss_values.append(avg_loss)
 
     return epochs, avg_loss
-
-
-
-
-

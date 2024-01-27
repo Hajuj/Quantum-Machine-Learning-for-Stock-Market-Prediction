@@ -1,5 +1,6 @@
-import numpy as np
 import csv
+
+import numpy as np
 
 
 def calculate_accuracy_score(percentage_changes, predicted_points, last_actual_value):
@@ -33,7 +34,3 @@ def save_data_to_csv(predictions, actual_values, days, accuracy, stock, constant
             ['Stock', 'Day', 'Predicted Price', 'Actual Price', 'Accuracy', 'Model Name', 'Architecture', 'Layers', 'Seed', 'Lookback', 'Batch Size'])
         for i in range(len(predictions)):
             csv_writer.writerow([f'{stock}', days[i], actual_values[i], predictions[i], accuracy] + constants)
-
-
-
-

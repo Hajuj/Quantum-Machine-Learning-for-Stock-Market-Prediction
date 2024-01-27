@@ -1,6 +1,5 @@
-from sklearn.linear_model import LinearRegression
 import numpy as np
-from sklearn.metrics import mean_squared_error
+from sklearn.linear_model import LinearRegression
 
 
 def get_baseline_points(test_loader, scaler):
@@ -20,4 +19,3 @@ def get_baseline_points(test_loader, scaler):
     denormalized_predictions = scaler.inverse_transform(dummy_array)[:, 0].flatten()
 
     return denormalized_predictions
-

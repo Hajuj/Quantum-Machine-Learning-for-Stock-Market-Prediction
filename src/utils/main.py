@@ -1,25 +1,23 @@
-import os
 import csv
+import os
 from datetime import datetime
 
 import numpy as np
-import matplotlib.dates as mdates
 import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 
+import baseline
 import evaluation
+import plot
 import preprocess
+import test
+import train
 from src.models.lstm import LSTM
 from src.models.qlstm import QLSTM
 from src.models.qrnn import QRNN
-
-import test
-import train
-import plot
-import baseline
 
 
 # Model parameters
@@ -44,7 +42,6 @@ optimizer = optim.Adam(model.parameters(), lr=0.03)
 scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=(0.1 * 1 / 3), total_iters=n_epochs,
                                   verbose=True)
 
-
 # Directory and trained model setup
 model_path = f'../trained_model/{model_name}'
 if not os.path.exists(model_path):
@@ -58,8 +55,6 @@ if not os.path.exists(results_train_dir):
 results_test_dir = f'../results/test/{model_name}'
 if not os.path.exists(results_test_dir):
     os.makedirs(results_test_dir)
-
-
 
 stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
           'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
