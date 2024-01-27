@@ -26,8 +26,9 @@ def load_and_clean_data(file_path, file_path_income):
     data['Volume'] = pd.to_numeric(data['Volume'], errors='coerce')
     data['Percentage Change'] = pd.to_numeric(data['Percentage Change'], errors='coerce')
     data['totalRevenue'] = pd.to_numeric(data['totalRevenue'], errors='coerce')
+    data['totalRevenue'] = data['totalRevenue'].shift(1)
+    data.dropna(how='all', inplace=True)
     data.reset_index(drop=True, inplace=True)
-
     features = list(data.columns)
 
     first_values = data.iloc[0, 0:]
@@ -48,7 +49,6 @@ def load_and_clean_data(file_path, file_path_income):
     data[target] = data[target_sensor].shift(forecast_lead)
     data[target] = pd.to_numeric(data[target], errors='coerce')
 
-    data = data.iloc[:-forecast_lead]
     data.dropna(inplace=True)
 
     return data, target, features
@@ -62,37 +62,8 @@ def split_and_scale_data(data, train_ratio):
     scaler = MinMaxScaler(feature_range=(-1, 1))
     np_train = scaler.fit_transform(df_train)
     np_test = scaler.transform(df_test)
-    # df_train = pd.DataFrame(np_train, columns=features)
-    # df_test = pd.DataFrame(np_test, columns=features)
-    # print("Test set fraction:", len(df_test) / len(data))
 
     return np_train, np_test, scaler
-
-
-# def prepare_dataframe_for_lstm(df, n_steps):
-#     """Prepare the dataframe for LSTM by creating shifted columns."""
-#     df = df.copy()
-#     df.set_index('Time', inplace=True)
-#     for i in range(1, n_steps + 1):
-#         df[f'Close(t-{i})'] = df['Close'].shift(i)
-#         df[f'Volume(t-{i})'] = df['Volume'].shift(i)
-#     df.dropna(inplace=True)
-#     return df
-
-
-# def scale_data(data):
-#     """Scale the data using MinMaxScaler and save the scaler."""
-#     scaler = MinMaxScaler(feature_range=(-1, 1))
-#     scaled_data = scaler.fit_transform(data)
-#     return scaled_data, scaler
-
-
-# def split_data(X, y, train_ratio=0.7):
-#     """Split the data into training and test sets."""
-#     split_index = int(len(X) * train_ratio)
-#     X_train, X_test = X[:split_index].copy(), X[split_index:].copy()
-#     y_train, y_test = y[:split_index].copy(), y[split_index:].copy()
-#     return X_train, X_test, y_train, y_test
 
 
 def reshape_for_lstm(y):
@@ -162,19 +133,26 @@ def get_loaders(data_path, data_path2):
     return train_loader, test_loader, batch_size, scaler
 
 
-def get_last_sequence(data_path):
-    data = pd.read_csv(data_path)
-    data = data[['Close']]
-    data['Close'] = pd.to_numeric(data['Close'], errors='coerce')
-    _, df_test, _ = split_and_scale_data(data)
-    last_sequence = df_test[-10:]
-    last_sequence = last_sequence.reshape((-1, 10, 1))
-    last_sequence = torch.tensor(last_sequence).float()
+def get_last_sequence(data_path, data_path2):
+    sequence_length = 10
+    # Data preparation
+    data, target, features = load_and_clean_data(data_path, data_path2)
+    scaled_train_data, _, _ = split_and_scale_data(data, 1)
+    train_dataset = SequenceDataset(scaled_train_data, target=target, features=features,
+                                    sequence_length=sequence_length)
+    last_sequence = train_dataset.X[-10:]
+    last_sequence = last_sequence.reshape((-1, sequence_length, len(features)))
     return last_sequence
 
 
 def create_new_sequence(last_sequence, output):
     updated_sequence = last_sequence[:, 1:, :]
     output = torch.tensor([output]).reshape(-1, 1, 1)
+    volume = last_sequence[:, :, 1]
+    volume_average = torch.sum(volume) / volume.size(dim=1)
+    percentage_change = output[0, 0, 0] / last_sequence[0, 9, 0]
+    total_revenue = last_sequence[0, 9, 3]
+    volume_average, percentage_change, total_revenue = volume_average.reshape((-1, 1, 1)), percentage_change.reshape((-1, 1, 1)), total_revenue.reshape((-1, 1, 1))
+    output = torch.cat([output, volume_average, percentage_change, total_revenue], dim=2)
     updated_sequence = torch.cat([updated_sequence, output], dim=1)
     return updated_sequence

@@ -59,7 +59,7 @@ n_epochs = 5
 best_stocks = ['NVDA', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'GOOGL', 'AMZN',
                'MSFT', 'AAPL', 'ABBV', 'PEP', 'CRM', 'PFE', 'NFLX', 'AMD']
 
-best_stocks = ['NVDA']
+best_stocks = ['AAPL']
 
 for i, stock in enumerate(best_stocks):
     data_path = f'../datasets/stock_data/{stock}.csv'

@@ -19,7 +19,7 @@ torch.manual_seed(seed)
 np.random.seed(seed)
 
 # Initialize the model
-input_size = 2
+input_size = 4
 hidden_size = 1
 n_qubits = 4
 n_qlayers = 2
@@ -93,7 +93,7 @@ best_stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM',
                'MSFT', 'AAPL', 'ABBV', 'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C',
                'MU']
 
-best_stocks = ['NVDA']
+best_stocks = ['AAPL']
 
 plots = '../plots/qlstm_10'
 if not os.path.exists(plots):
@@ -102,7 +102,8 @@ if not os.path.exists(plots):
 
 for i, stock in enumerate(best_stocks):
     data_path = f'../datasets/stock_data/{stock}.csv'
-    train_loader, test_loader, batch_size, scaler = preprocess.get_loaders(data_path)
+    data_path_income = f'../datasets/stock_data/{stock}_Income.csv'
+    train_loader, test_loader, batch_size, scaler = preprocess.get_loaders(data_path, data_path_income)
 
     print(f'Tested stock: {stock}, {i + 1}/{len(best_stocks)}')
 
@@ -110,64 +111,64 @@ for i, stock in enumerate(best_stocks):
     predicted_points, avg_test_loss = test_model(model, test_loader, loss_function, scaler)
     predicted_points_np = predicted_points.tolist()
 
-    last_sequence = preprocess.get_last_sequence(data_path)
-    # predicted_10_points = test_model_10day(model, last_sequence, scaler)
-
+    last_sequence = preprocess.get_last_sequence(data_path, data_path_income)
+    predicted_10_points = test_model_10day(model, last_sequence, scaler)
+    print(predicted_10_points)
     # Plotting
     # Load the entire dataset (x and y values)
-    data = pd.read_csv(data_path)
-    data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
-
-    # Convert 'Time' to the format matplotlib requires
-    x_values = mdates.date2num(data['Time'].values)
-    y_values = data['Close'].values
-
-    # Calculate the starting index for test data
-    num_train_batches = len(train_loader)
-    train_data_length = batch_size * num_train_batches
-
-    # difference between actual and predicted points
-    x_test_area = x_values[train_data_length:train_data_length + len(predicted_points)]
-    y_test_area = y_values[train_data_length:train_data_length + len(predicted_points)]
-
-    baseline_points = []
-    for i in y_values[train_data_length - 1:train_data_length + len(predicted_points)]:
-        baseline_points.append(i)
-    baseline_points = baseline_points[:-1]
-
-    # baseline_loss = loss_function(torch.tensor(baseline_points), torch.tensor(y_test_area))
-
-    # print(f"Baseline Loss: {baseline_loss:.4f}\n")
-
-    # Plot the entire actual data
-    plt.plot(x_values, y_values, '-', label='Actual')
+    # data = pd.read_csv(data_path)
+    # data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
+    #
+    # # Convert 'Time' to the format matplotlib requires
+    # x_values = mdates.date2num(data['Time'].values)
+    # y_values = data['Close'].values
+    #
+    # # Calculate the starting index for test data
+    # num_train_batches = len(train_loader)
+    # train_data_length = batch_size * num_train_batches
+    #
+    # # difference between actual and predicted points
+    # x_test_area = x_values[train_data_length:train_data_length + len(predicted_points)]
+    # y_test_area = y_values[train_data_length:train_data_length + len(predicted_points)]
+    #
+    # baseline_points = []
+    # for i in y_values[train_data_length - 1:train_data_length + len(predicted_points)]:
+    #     baseline_points.append(i)
+    # baseline_points = baseline_points[:-1]
+    #
+    # # baseline_loss = loss_function(torch.tensor(baseline_points), torch.tensor(y_test_area))
+    #
+    # # print(f"Baseline Loss: {baseline_loss:.4f}\n")
+    #
+    # # Plot the entire actual data
+    # plt.plot(x_values, y_values, '-', label='Actual')
 
     # Plot the predicted points for the test data
-    plt.plot(x_values[train_data_length:train_data_length + len(predicted_points)],
-                predicted_points,
-                color='red',
-                label='Predicted')
-
-    # Plot the baseline
     # plt.plot(x_values[train_data_length:train_data_length + len(predicted_points)],
-    #             baseline_points,
-    #             color='yellow',
-    #             label='Baseline')
-
-    # Set the locator and formatter for the x-axis
-    locator = mdates.AutoDateLocator(minticks=3, maxticks=10)
-    formatter = mdates.ConciseDateFormatter(locator)
-    plt.gca().xaxis.set_major_locator(locator)
-    plt.gca().xaxis.set_major_formatter(formatter)
-
-    plt.title(f'{stock} Stock Prediction')
-    plt.xlabel('Time Steps')
-    plt.ylabel('Price')
-    plt.legend()
-
-    plt.savefig(plots + f'/{stock}.png', dpi=300, format='png', bbox_inches='tight')
-
-    plt.show()
+    #             predicted_points,
+    #             color='red',
+    #             label='Predicted')
+    #
+    # # Plot the baseline
+    # # plt.plot(x_values[train_data_length:train_data_length + len(predicted_points)],
+    # #             baseline_points,
+    # #             color='yellow',
+    # #             label='Baseline')
+    #
+    # # Set the locator and formatter for the x-axis
+    # locator = mdates.AutoDateLocator(minticks=3, maxticks=10)
+    # formatter = mdates.ConciseDateFormatter(locator)
+    # plt.gca().xaxis.set_major_locator(locator)
+    # plt.gca().xaxis.set_major_formatter(formatter)
+    #
+    # plt.title(f'{stock} Stock Prediction')
+    # plt.xlabel('Time Steps')
+    # plt.ylabel('Price')
+    # plt.legend()
+    #
+    # plt.savefig(plots + f'/{stock}.png', dpi=300, format='png', bbox_inches='tight')
+    #
+    # plt.show()
 
 # Plot 10 days from 30-11-2023
 
