@@ -130,7 +130,7 @@ def get_loaders(data_path, data_path2):
     print("Features shape:", X.shape)
     print("Target shape:", y.shape)
 
-    return train_loader, test_loader, batch_size, scaler
+    return train_loader, test_loader, batch_size, scaler, sequence_length
 
 
 def get_last_sequence(data_path, data_path2):
