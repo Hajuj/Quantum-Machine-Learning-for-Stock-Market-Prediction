@@ -35,7 +35,7 @@ model = models[model_name]
 arch = "1"
 
 # Loss function and optimizer and scheduler
-n_epochs = 1
+n_epochs = 50
 loss_function = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.03)
 scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=(0.1 * 1 / 3), total_iters=n_epochs,
@@ -57,12 +57,13 @@ if not os.path.exists(results_test_dir):
 
 stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
           'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
-stocks = ['AAPL']
-# Heatmap data
+# stocks = ['AAPL']
 
+# Heatmap data
 selected_stocks = ['AAPL', 'KO', 'BABA', 'MA', 'PG', 'PFE', 'NKE', 'TSLA', 'T', 'PM']
 selected_stocks_with_result_file = []
-selected_stocks = ['AAPL']
+# selected_stocks = ['AAPL']
+
 
 def save_model(model, seed, timestamp):
     """Save the trained model"""
@@ -98,7 +99,8 @@ for seed in range(1, 6):
             for i, stock in enumerate(stocks):
                 data_path = os.path.join('..', 'datasets', 'stock_data', f'{stock}.csv')
                 data_path_income = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Income.csv')
-                train_loader, test_loader, batch_size, scaler, lookback = preprocess.get_loaders(data_path, data_path_income)
+                train_loader, test_loader, batch_size, scaler, lookback = preprocess.get_loaders(data_path,
+                                                                                                 data_path_income)
 
                 print(f'\n{stock} in training: {i + 1}/{len(stocks)}')
 
@@ -108,7 +110,9 @@ for seed in range(1, 6):
                 print(f"Epoch {epoch + 1}/{n_epochs}, Loss: {avg_loss:.4f}, Seed: {seed}")
 
                 # Save stats
-                csv_writer.writerow([epoch + 1, stock, avg_loss, model_name, arch, n_qlayers, format(scheduler.get_last_lr()[0], '.6f'), lookback, batch_size, n_epochs, seed])
+                csv_writer.writerow(
+                    [epoch + 1, stock, avg_loss, model_name, arch, n_qlayers, format(scheduler.get_last_lr()[0], '.6f'),
+                     lookback, batch_size, n_epochs, seed])
 
             scheduler.step()  # Update the scheduler
 
@@ -116,7 +120,6 @@ for seed in range(1, 6):
         model_saved_path = save_model(model, seed, timestamp)
 
     # Testing
-
     for i, stock in enumerate(stocks):
         data_path = f'../datasets/stock_data/{stock}.csv'
         data_path_income = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Income.csv')
@@ -142,9 +145,7 @@ for seed in range(1, 6):
         last_sequence = preprocess.get_last_sequence(data_path, data_path_income)
         predicted_10_points = test.test_model_10day(model, last_sequence, scaler, model_saved_path)
 
-
         # Plotting
-
         data = pd.read_csv(data_path)
         data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
 
@@ -168,7 +169,8 @@ for seed in range(1, 6):
         # Calculate Accuracy Score
         last_actual_value = y_values[train_data_length - 1]
         test_percentage_changes = percentage_changes[train_data_length:train_data_length + len(predicted_points)]
-        accuracy_score = evaluation.calculate_accuracy_score(test_percentage_changes, predicted_points, last_actual_value)
+        accuracy_score = evaluation.calculate_accuracy_score(test_percentage_changes, predicted_points,
+                                                             last_actual_value)
 
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         file_name = f"{model_name}_seed{seed}_{timestamp}.csv"
@@ -178,7 +180,8 @@ for seed in range(1, 6):
             selected_stocks_with_result_file.append([stock, test_file_path])
 
         constants = [model_name, arch, n_qlayers, seed, lookback, batch_size]
-        evaluation.save_data_to_csv(predicted_points, y_test_area, x_test_area, accuracy_score, stock, constants, test_file_path)
+        evaluation.save_data_to_csv(predicted_points, y_test_area, x_test_area, accuracy_score, stock, constants,
+                                    test_file_path)
 
         # Plot 10 days from 30-11-2023
         data = pd.read_csv(f'../datasets/stock_data_10_days/{stock}.csv')
@@ -204,7 +207,4 @@ for seed in range(1, 6):
     accumulated_evaluation_path = f'../plots/evaluation/{model_name}'
     plot.plot_accumulated_loss_curve(train_file_path, accumulated_evaluation_path, seed)
 
-    plot.plot_heatmap(selected_stocks_with_result_file, accumulated_evaluation_path)
-
-
-
+    # plot.plot_heatmap(selected_stocks_with_result_file, accumulated_evaluation_path)
