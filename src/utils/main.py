@@ -59,6 +59,11 @@ if not os.path.exists(results_test_dir):
 stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
           'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
 
+# Heatmap data
+
+selected_stocks = ['AAPL', 'KO', 'BABA', 'MA', 'PG', 'PFE', 'NKE', 'TSLA', 'T', 'PM']
+selected_stocks_with_result_file = []
+
 
 def save_model(model, seed, timestamp):
     """Save the trained model"""
@@ -91,7 +96,8 @@ for seed in range(1, 6):
         for epoch in range(n_epochs):
             for i, stock in enumerate(stocks):
                 data_path = os.path.join('..', 'datasets', 'stock_data', f'{stock}.csv')
-                train_loader, test_loader, batch_size, scaler, lookback = preprocess.get_loaders(data_path)
+                data_path_income = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Income.csv')
+                train_loader, test_loader, batch_size, scaler, lookback = preprocess.get_loaders(data_path, data_path_income)
 
                 print(f'\n{stock} in training: {i + 1}/{len(stocks)}')
 
@@ -112,7 +118,8 @@ for seed in range(1, 6):
 
     for i, stock in enumerate(stocks):
         data_path = f'../datasets/stock_data/{stock}.csv'
-        train_loader, test_loader, batch_size, scaler, lookback = preprocess.get_loaders(data_path)
+        data_path_income = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Income.csv')
+        train_loader, test_loader, batch_size, scaler, lookback = preprocess.get_loaders(data_path, data_path_income)
 
         stock_plot_path = f'../plots/{model_name}/{stock}'
         if not os.path.exists(stock_plot_path):
@@ -131,7 +138,7 @@ for seed in range(1, 6):
         # Testing the model
         predicted_points, avg_test_loss = test.test_model(model, test_loader, loss_function, scaler, model_saved_path)
 
-        last_sequence = preprocess.get_last_sequence(data_path)
+        last_sequence = preprocess.get_last_sequence(data_path, data_path_income)
         predicted_10_points = test.test_model_10day(model, last_sequence, scaler, model_saved_path)
 
 
@@ -166,6 +173,9 @@ for seed in range(1, 6):
         file_name = f"{model_name}_seed{seed}_{timestamp}.csv"
         test_file_path = os.path.join(results, file_name)
 
+        if selected_stocks.__contains__(stock):
+            selected_stocks_with_result_file.append([stock, test_file_path])
+
         constants = [model_name, arch, n_qlayers, seed, lookback, batch_size]
         evaluation.save_data_to_csv(predicted_points, y_test_area, x_test_area, accuracy_score, stock, constants, test_file_path)
 
@@ -183,7 +193,7 @@ for seed in range(1, 6):
         baseline_points = baseline.get_baseline_points(test_loader, scaler)
 
         # Plotting the Baseline
-        plot.plot_baseline(baseline_points, y_test_area, x_test_area, stock, plots)
+        plot.plot_baseline(baseline_points, y_test_area, x_test_area, stock, stock_plot_path)
 
         # Evaluation
 
@@ -191,6 +201,9 @@ for seed in range(1, 6):
         plot.plot_loss_curve(train_file_path, evaluation_plot_path, stock, seed)
 
     accumulated_evaluation_path = f'../plots/evaluation/{model_name}'
-    num_stocks = len(stocks)
-
     plot.plot_accumulated_loss_curve(train_file_path, accumulated_evaluation_path, seed)
+
+    plot.plot_heatmap(selected_stocks_with_result_file, accumulated_evaluation_path)
+
+
+
