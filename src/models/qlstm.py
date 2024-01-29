@@ -2,10 +2,6 @@ import pennylane as qml
 import torch
 import torch.nn as nn
 
-# Set the seed for reproducibility
-seed = 42
-torch.manual_seed(seed)
-
 
 class QLSTM(nn.Module):
     def __init__(self,
@@ -100,6 +96,10 @@ class QLSTM(nn.Module):
             x_t = x[:, t, :]
             v_t = torch.cat((h_t, x_t), dim=1)
             y_t = self.clayer_in(v_t)
+
+            # Normalize y_t to be in the range -pi to pi
+            y_t = torch.remainder(y_t + torch.pi, 2 * torch.pi) - torch.pi
+
             f_t = torch.sigmoid(self.clayer_out(self.VQC['forget'](y_t)))
             i_t = torch.sigmoid(self.clayer_out(self.VQC['input'](y_t)))
             g_t = torch.tanh(self.clayer_out(self.VQC['update'](y_t)))
@@ -109,3 +109,7 @@ class QLSTM(nn.Module):
             h_t = o_t * torch.tanh(c_t)
 
         return h_t
+
+    # Set the seed for reproducibility
+    def set_seed(self, seed):
+        torch.manual_seed(seed)

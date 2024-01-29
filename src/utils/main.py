@@ -19,7 +19,6 @@ from src.models.lstm import LSTM
 from src.models.qlstm import QLSTM
 from src.models.qrnn import QRNN
 
-
 # Model parameters
 input_size = 4
 hidden_size = 1
@@ -79,6 +78,8 @@ for seed in range(1, 6):
     # Set the seed for reproducibility
     torch.manual_seed(seed)
     np.random.seed(seed)
+
+    model.set_seed(seed)
 
     print(f"\nTraining with seed: {seed}")
 
