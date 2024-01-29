@@ -13,7 +13,7 @@ def test_model_10day(model, last_sequence, scaler, model_path):
         new_sequence = last_sequence
         predictions.append(output)
         for _ in range(9):
-            new_sequence = preprocess.create_new_sequence(new_sequence, output)
+            new_sequence = preprocess.update_recurrent_sequence(new_sequence, output)
             output = model(new_sequence)
             predictions.append(output)
 

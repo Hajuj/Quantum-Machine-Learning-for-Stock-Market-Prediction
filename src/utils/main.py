@@ -21,7 +21,7 @@ from src.models.qrnn import QRNN
 
 
 # Model parameters
-input_size = 1
+input_size = 4
 hidden_size = 1
 n_qubits = 4
 n_qlayers = 2
@@ -36,7 +36,7 @@ model = models[model_name]
 arch = "1"
 
 # Loss function and optimizer and scheduler
-n_epochs = 50
+n_epochs = 1
 loss_function = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.03)
 scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=(0.1 * 1 / 3), total_iters=n_epochs,
@@ -58,12 +58,12 @@ if not os.path.exists(results_test_dir):
 
 stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
           'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
-
+stocks = ['AAPL']
 # Heatmap data
 
 selected_stocks = ['AAPL', 'KO', 'BABA', 'MA', 'PG', 'PFE', 'NKE', 'TSLA', 'T', 'PM']
 selected_stocks_with_result_file = []
-
+selected_stocks = ['AAPL']
 
 def save_model(model, seed, timestamp):
     """Save the trained model"""
