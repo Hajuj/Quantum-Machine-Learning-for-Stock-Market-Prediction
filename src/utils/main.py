@@ -12,6 +12,7 @@ import torch.optim.lr_scheduler as lr_scheduler
 import evaluation
 import plot
 import preprocess
+import preprocess8inputs
 import test
 import train
 from src.models import baseline
@@ -21,10 +22,15 @@ from src.models.qrnn import QRNN
 
 
 # Model parameters
-input_size = 4
+input_size = 8
 hidden_size = 1
 n_qubits = 4
 n_qlayers = 2
+
+# Training parameters
+train_ratio = 0.7
+sequence_length = 10
+batch_size = 16
 
 # Model selection
 models = {'QLSTM': QLSTM(input_size, hidden_size, n_qubits, n_qlayers),
@@ -58,12 +64,11 @@ if not os.path.exists(results_test_dir):
 
 stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
           'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
-stocks = ['AAPL']
+stocks = ['NVDA']
 # Heatmap data
-
 selected_stocks = ['AAPL', 'KO', 'BABA', 'MA', 'PG', 'PFE', 'NKE', 'TSLA', 'T', 'PM']
 selected_stocks_with_result_file = []
-selected_stocks = ['AAPL']
+selected_stocks = ['NVDA']
 
 def save_model(model, seed, timestamp):
     """Save the trained model"""
@@ -97,7 +102,10 @@ for seed in range(1, 6):
             for i, stock in enumerate(stocks):
                 data_path = os.path.join('..', 'datasets', 'stock_data', f'{stock}.csv')
                 data_path_income = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Income.csv')
-                train_loader, test_loader, batch_size, scaler, lookback = preprocess.get_loaders(data_path, data_path_income)
+                data_path_cashflow = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Cashflow.csv')
+                data_path_balance = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Balance.csv')
+                # train_loader, test_loader, scaler, lookback = preprocess.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income)
+                train_loader, test_loader, scaler, lookback = preprocess8inputs.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income, data_path_cashflow, data_path_balance)
 
                 print(f'\n{stock} in training: {i + 1}/{len(stocks)}')
 
@@ -119,7 +127,10 @@ for seed in range(1, 6):
     for i, stock in enumerate(stocks):
         data_path = f'../datasets/stock_data/{stock}.csv'
         data_path_income = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Income.csv')
-        train_loader, test_loader, batch_size, scaler, lookback = preprocess.get_loaders(data_path, data_path_income)
+        data_path_cashflow = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Cashflow.csv')
+        data_path_balance = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Balance.csv')
+        # train_loader, test_loader, scaler, lookback = preprocess.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income)
+        train_loader, test_loader, scaler, lookback = preprocess8inputs.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income, data_path_cashflow, data_path_balance)
 
         stock_plot_path = f'../plots/{model_name}/{stock}'
         if not os.path.exists(stock_plot_path):
@@ -138,7 +149,8 @@ for seed in range(1, 6):
         # Testing the model
         predicted_points, avg_test_loss = test.test_model(model, test_loader, loss_function, scaler, model_saved_path)
 
-        last_sequence = preprocess.get_last_sequence(data_path, data_path_income)
+        # last_sequence = preprocess.get_last_sequence(sequence_length, train_ratio, data_path, data_path_income)
+        last_sequence = preprocess8inputs.get_last_sequence(sequence_length, train_ratio, data_path, data_path_income, data_path_cashflow, data_path_balance)
         predicted_10_points = test.test_model_10day(model, last_sequence, scaler, model_saved_path)
 
 
@@ -180,10 +192,11 @@ for seed in range(1, 6):
         evaluation.save_data_to_csv(predicted_points, y_test_area, x_test_area, accuracy_score, stock, constants, test_file_path)
 
         # Plot 10 days from 30-11-2023
-        data = pd.read_csv(f'../datasets/stock_data_10_days/{stock}.csv')
+        data = pd.read_csv(f'../datasets/stock_data/{stock}.csv')
         data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
-        x_values = data['Time'].values
-        y_values = data['Close'].values
+        data10 = data[int(len(data) * train_ratio):int(len(data) * train_ratio) + 10].copy()
+        x_values = data10['Time'].values
+        y_values = data10['Close'].values
 
         plot.plot_10_day_prediction(predicted_10_points, x_values, y_values, stock, stock_plot_path)
 
