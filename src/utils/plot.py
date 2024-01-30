@@ -37,7 +37,6 @@ def evaluate_results(actual, predicted, stock, model):
     plt.xticks([])
 
     plt.savefig(plots + f'/{stock}/test_loss.png', dpi=300, format='png')
-    plt.show()
 
 
 def show_loss_curve(epochs, loss_values, stock, model):
@@ -53,7 +52,6 @@ def show_loss_curve(epochs, loss_values, stock, model):
     plt.legend()
 
     plt.savefig(plots + f'/loss_curve_training.png', dpi=300, format='png')
-    plt.show()
 
 
 def plot_1_day_predictions(predictions, actual_values, time_values, stock, save_path):
@@ -83,8 +81,6 @@ def plot_1_day_predictions(predictions, actual_values, time_values, stock, save_
 
     plt.savefig(save_path + '/1day.png', dpi=300, format='png', bbox_inches='tight')
 
-    plt.show()
-
 
 def plot_10_day_prediction(predictions, time_values, actual_values, stock, save_path):
 
@@ -103,8 +99,6 @@ def plot_10_day_prediction(predictions, time_values, actual_values, stock, save_
     plt.legend()
 
     plt.savefig(save_path + '/10day.png', dpi=300, format='png', bbox_inches='tight')
-
-    plt.show()
 
 
 def plot_loss_curve(data_path, save_path, stock, seed):
@@ -126,7 +120,6 @@ def plot_loss_curve(data_path, save_path, stock, seed):
     plt.title(f'Loss vs Epochs for Stock: {stock}')
 
     plt.savefig(save_path + f'/train_loss_seed_{seed}', dpi=300, format='png', bbox_inches='tight')
-    plt.show()
 
 
 def plot_accumulated_loss_curve(data_path, save_path, seed):
@@ -140,7 +133,6 @@ def plot_accumulated_loss_curve(data_path, save_path, seed):
     plt.ylabel('Average Loss')
     plt.title('Average Loss per Epoch')
     plt.savefig(save_path + f'/accumulated_train_loss_seed_{seed}', dpi=300, format='png', bbox_inches='tight')
-    plt.show()
 
 
 def plot_baseline(predictions, actual_values, time_values, stock, save_path):
@@ -167,8 +159,6 @@ def plot_baseline(predictions, actual_values, time_values, stock, save_path):
     plt.legend()
 
     plt.savefig(save_path + '/baseline.png', dpi=300, format='png', bbox_inches='tight')
-
-    plt.show()
 
 
 def plot_heatmap(selected_stocks_with_result_file, save_path):
@@ -204,4 +194,3 @@ def plot_heatmap(selected_stocks_with_result_file, save_path):
     plt.xlabel('Stocks')
     plt.ylabel('Model')
     plt.savefig(save_path, dpi=300, format='png', bbox_inches='tight')
-    plt.show()

@@ -107,3 +107,7 @@ class QRNN(nn.Module):
             # h_t = torch.tanh(o_t)
 
         return h_t
+
+    # Set the seed for reproducibility
+    def set_seed(self, seed):
+        torch.manual_seed(seed)
