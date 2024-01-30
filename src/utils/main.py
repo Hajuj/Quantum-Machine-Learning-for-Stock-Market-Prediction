@@ -173,7 +173,7 @@ for seed in range(1, 6):
                                                              last_actual_value)
 
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        file_name = f"{model_name}_seed{seed}_{timestamp}.csv"
+        file_name = f"1day_{model_name}_seed{seed}_{timestamp}.csv"
         test_file_path = os.path.join(results, file_name)
 
         if selected_stocks.__contains__(stock):
@@ -190,6 +190,10 @@ for seed in range(1, 6):
         y_values = data['Close'].values
 
         plot.plot_10_day_prediction(predicted_10_points, x_values, y_values, stock, stock_plot_path)
+
+        file_name = f"10day_{model_name}_seed{seed}_{timestamp}.csv"
+        test_file_path_10_day = os.path.join(results, file_name)
+        evaluation.save_data_to_csv_no_accuracy(predicted_10_points, y_values, x_values, stock, constants, test_file_path_10_day)
 
         # Save 10 day prediction to csv
 
