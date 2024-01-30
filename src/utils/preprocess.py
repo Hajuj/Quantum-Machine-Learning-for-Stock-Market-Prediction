@@ -108,7 +108,7 @@ def get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path2)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    return train_loader, test_loader, batch_size, scaler, sequence_length
+    return train_loader, test_loader, scaler
 
 
 def get_last_sequence(sequence_length, train_ratio, data_path, data_path2):

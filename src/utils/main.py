@@ -107,7 +107,7 @@ for seed in range(1, 6):
                 data_path_income = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Income.csv')
                 data_path_cashflow = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Cashflow.csv')
                 data_path_balance = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Balance.csv')
-                # train_loader, test_loader, scaler, lookback = preprocess.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income)
+                # train_loader, test_loader, scaler = preprocess.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income)
                 train_loader, test_loader, scaler = preprocess8inputs.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income, data_path_cashflow, data_path_balance)
 
                 print(f'\n{stock} in training: {i + 1}/{len(stocks)}')
@@ -133,7 +133,7 @@ for seed in range(1, 6):
         data_path_income = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Income.csv')
         data_path_cashflow = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Cashflow.csv')
         data_path_balance = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Balance.csv')
-        # train_loader, test_loader, scaler, lookback = preprocess.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income)
+        # train_loader, test_loader, scaler = preprocess.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income)
         train_loader, test_loader, scaler = preprocess8inputs.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income, data_path_cashflow, data_path_balance)
 
         stock_plot_path = f'../plots/{model_name}/{stock}'
