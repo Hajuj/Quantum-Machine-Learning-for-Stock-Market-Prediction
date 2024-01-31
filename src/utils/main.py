@@ -21,7 +21,7 @@ from src.models.qlstm import QLSTM
 from src.models.qrnn import QRNN
 
 # Model parameters
-input_size = 8
+input_size = 4
 hidden_size = 1
 n_qubits = 4
 n_qlayers = 2
@@ -39,6 +39,7 @@ models = {'QLSTM': QLSTM(input_size, hidden_size, n_qubits, n_qlayers),
 model_name = "QLSTM"
 model = models[model_name]
 arch = "1"
+quantum = True
 
 # Loss function and optimizer and scheduler
 n_epochs = 50
@@ -98,7 +99,7 @@ for seed in range(1, 6):
     with open(train_file_path, mode='w', newline='') as file:
         csv_writer = csv.writer(file)
         csv_writer.writerow(
-            ['epoch', 'stock', 'avg_loss', 'model_name', 'arch', 'n_qlayers', 'lr', 'lookback', 'batch_size', 'n_epoch',
+            ['epoch', 'stock', 'avg_loss', 'model_name', 'arch', 'n_qubits', 'n_qlayers', 'lr', 'lookback', 'batch_size', 'n_epoch',
              'seed'])
 
         for epoch in range(n_epochs):
@@ -107,8 +108,11 @@ for seed in range(1, 6):
                 data_path_income = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Income.csv')
                 data_path_cashflow = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Cashflow.csv')
                 data_path_balance = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Balance.csv')
-                # train_loader, test_loader, scaler = preprocess.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income)
-                train_loader, test_loader, scaler = preprocess8inputs.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income, data_path_cashflow, data_path_balance)
+
+                if n_qubits == 4:
+                    train_loader, test_loader, scaler = preprocess.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income)
+                else:
+                    train_loader, test_loader, scaler = preprocess8inputs.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income, data_path_cashflow, data_path_balance)
 
                 print(f'\n{stock} in training: {i + 1}/{len(stocks)}')
 
@@ -119,8 +123,8 @@ for seed in range(1, 6):
 
                 # Save stats
                 csv_writer.writerow(
-                    [epoch + 1, stock, avg_loss, model_name, arch, n_qlayers, format(scheduler.get_last_lr()[0], '.6f'),
-                     sequence_length, batch_size, n_epochs, seed])
+                    [epoch + 1, stock, avg_loss, model_name, arch, n_qubits, n_qlayers, format(scheduler.get_last_lr()[0], '.6f'),
+                     sequence_length, batch_size, len(epochs), seed])
 
             scheduler.step()  # Update the scheduler
 
@@ -133,8 +137,14 @@ for seed in range(1, 6):
         data_path_income = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Income.csv')
         data_path_cashflow = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Cashflow.csv')
         data_path_balance = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Balance.csv')
-        # train_loader, test_loader, scaler = preprocess.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income)
-        train_loader, test_loader, scaler = preprocess8inputs.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income, data_path_cashflow, data_path_balance)
+
+        if n_qubits == 4:
+            train_loader, test_loader, scaler = preprocess.get_loaders(sequence_length, batch_size, train_ratio,
+                                                                       data_path, data_path_income)
+        else:
+            train_loader, test_loader, scaler = preprocess8inputs.get_loaders(sequence_length, batch_size, train_ratio,
+                                                                              data_path, data_path_income,
+                                                                              data_path_cashflow, data_path_balance)
 
         stock_plot_path = f'../plots/{model_name}/{stock}'
         if not os.path.exists(stock_plot_path):
@@ -153,8 +163,11 @@ for seed in range(1, 6):
         # Testing the model
         predicted_points, avg_test_loss = test.test_model(model, test_loader, loss_function, scaler, model_saved_path)
 
-        # last_sequence = preprocess.get_last_sequence(sequence_length, train_ratio, data_path, data_path_income)
-        last_sequence = preprocess8inputs.get_last_sequence(sequence_length, train_ratio, data_path, data_path_income, data_path_cashflow, data_path_balance)
+        if n_qubits == 4:
+            last_sequence = preprocess.get_last_sequence(sequence_length, train_ratio, data_path, data_path_income)
+        else:
+            last_sequence = preprocess8inputs.get_last_sequence(sequence_length, train_ratio, data_path, data_path_income, data_path_cashflow, data_path_balance)
+
         predicted_10_points = test.test_model_10day(model, last_sequence, scaler, model_saved_path)
 
         # Plotting
@@ -174,7 +187,7 @@ for seed in range(1, 6):
         x_test_area = x_values[train_data_length:train_data_length + len(predicted_points)]
         y_test_area = y_values[train_data_length:train_data_length + len(predicted_points)]
 
-        plot.plot_1_day_predictions(predicted_points, y_test_area, x_test_area, stock, stock_plot_path)
+        # plot.plot_1_day_predictions(predicted_points, y_test_area, x_test_area, stock, stock_plot_path)
 
         # Save test data to csv
 
@@ -185,13 +198,13 @@ for seed in range(1, 6):
                                                              last_actual_value)
 
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        file_name = f"1day_{model_name}_seed{seed}_{timestamp}.csv"
+        file_name = f"1_{seed}_{arch}_{n_qubits}_{n_qlayers}_{sequence_length}_{batch_size}_{timestamp}.csv"
         test_file_path = os.path.join(results, file_name)
 
         if selected_stocks.__contains__(stock):
             selected_stocks_with_result_file.append([stock, test_file_path])
 
-        constants = [model_name, arch, n_qlayers, seed, sequence_length, batch_size]
+        constants = [model_name, arch, n_qubits, n_qlayers, seed, sequence_length, batch_size]
         evaluation.save_data_to_csv(predicted_points, y_test_area, x_test_area, accuracy_score, stock, constants,
                                     test_file_path)
 
@@ -202,9 +215,9 @@ for seed in range(1, 6):
         x_values = data10['Time'].values
         y_values = data10['Close'].values
 
-        plot.plot_10_day_prediction(predicted_10_points, x_values, y_values, stock, stock_plot_path)
+        # plot.plot_10_day_prediction(predicted_10_points, x_values, y_values, stock, stock_plot_path)
 
-        file_name = f"10day_{model_name}_seed{seed}_{timestamp}.csv"
+        file_name = f"10_seed{seed}_{arch}_{n_qubits}_{n_qlayers}_{sequence_length}_{batch_size}_{timestamp}.csv"
         test_file_path_10_day = os.path.join(results, file_name)
         evaluation.save_data_to_csv_no_accuracy(predicted_10_points, y_values, x_values, stock, constants, test_file_path_10_day)
 
@@ -214,14 +227,14 @@ for seed in range(1, 6):
         baseline_points = baseline.get_baseline_points(test_loader, scaler)
 
         # Plotting the Baseline
-        plot.plot_baseline(baseline_points, y_test_area, x_test_area, stock, stock_plot_path)
+        # plot.plot_baseline(baseline_points, y_test_area, x_test_area, stock, stock_plot_path)
 
         # Evaluation
 
         # Loss Curve plotting
-        plot.plot_loss_curve(train_file_path, evaluation_plot_path, stock, seed)
+        # plot.plot_loss_curve(train_file_path, evaluation_plot_path, stock, seed)
 
-    accumulated_evaluation_path = f'../plots/evaluation/{model_name}'
-    plot.plot_accumulated_loss_curve(train_file_path, accumulated_evaluation_path, seed)
+    # accumulated_evaluation_path = f'../plots/evaluation/{model_name}'
+    # plot.plot_accumulated_loss_curve(train_file_path, accumulated_evaluation_path, seed)
 
     # plot.plot_heatmap(selected_stocks_with_result_file, accumulated_evaluation_path)

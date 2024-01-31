@@ -31,7 +31,7 @@ def save_data_to_csv(predictions, actual_values, days, accuracy, stock, constant
     with open(save_path, mode='w', newline='') as file:
         csv_writer = csv.writer(file)
         csv_writer.writerow(
-            ['Stock', 'Day', 'Predicted Price', 'Actual Price', 'Accuracy', 'Model Name', 'Architecture', 'Layers', 'Seed', 'Lookback', 'Batch Size'])
+            ['Stock', 'Day', 'Predicted Price', 'Actual Price', 'Accuracy', 'Model Name', 'Architecture', 'Qubits', 'Layers', 'Seed', 'Lookback', 'Batch Size'])
         for i in range(len(predictions)):
             csv_writer.writerow([f'{stock}', days[i], actual_values[i], predictions[i], accuracy] + constants)
 
@@ -40,6 +40,6 @@ def save_data_to_csv_no_accuracy(predictions, actual_values, days, stock, consta
     with open(save_path, mode='w', newline='') as file:
         csv_writer = csv.writer(file)
         csv_writer.writerow(
-            ['Stock', 'Day', 'Predicted Price', 'Actual Price', 'Model Name', 'Architecture', 'Layers', 'Seed', 'Lookback', 'Batch Size'])
+            ['Stock', 'Day', 'Predicted Price', 'Actual Price', 'Model Name', 'Architecture', 'Qubits', 'Layers', 'Seed', 'Lookback', 'Batch Size'])
         for i in range(len(predictions)):
             csv_writer.writerow([f'{stock}', days[i], actual_values[i], predictions[i]] + constants)
