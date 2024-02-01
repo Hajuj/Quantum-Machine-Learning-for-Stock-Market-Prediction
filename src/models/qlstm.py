@@ -7,11 +7,10 @@ class QLSTM(nn.Module):
     def __init__(self,
                  input_size,
                  hidden_size,
-                 n_qubits=4,
-                 n_qlayers=2,
+                 n_qubits,
+                 n_qlayers,
+                 variational_layer,
                  batch_first=True,
-                 return_sequences=False,
-                 return_state=False,
                  backend="default.qubit"):
         super(QLSTM, self).__init__()
         self.n_inputs = input_size
@@ -22,8 +21,6 @@ class QLSTM(nn.Module):
         self.backend = backend
 
         self.batch_first = batch_first
-        self.return_sequences = return_sequences
-        self.return_state = return_state
 
         self.dev = qml.device(self.backend, wires=self.n_qubits)
 
@@ -39,28 +36,28 @@ class QLSTM(nn.Module):
 
         def _circuit_forget(inputs, weights):
             qml.templates.AngleEmbedding(inputs, wires=self.wires_forget)
-            qml.templates.BasicEntanglerLayers(weights, wires=self.wires_forget)
+            variational_layer(weights, wires=self.wires_forget)
             return [qml.expval(qml.PauliZ(wires=w)) for w in self.wires_forget]
 
         self.qlayer_forget = qml.QNode(_circuit_forget, self.dev_forget, interface="torch")
 
         def _circuit_input(inputs, weights):
             qml.templates.AngleEmbedding(inputs, wires=self.wires_input)
-            qml.templates.BasicEntanglerLayers(weights, wires=self.wires_input)
+            variational_layer(weights, wires=self.wires_input)
             return [qml.expval(qml.PauliZ(wires=w)) for w in self.wires_input]
 
         self.qlayer_input = qml.QNode(_circuit_input, self.dev_input, interface="torch")
 
         def _circuit_update(inputs, weights):
             qml.templates.AngleEmbedding(inputs, wires=self.wires_update)
-            qml.templates.BasicEntanglerLayers(weights, wires=self.wires_update)
+            variational_layer(weights, wires=self.wires_update)
             return [qml.expval(qml.PauliZ(wires=w)) for w in self.wires_update]
 
         self.qlayer_update = qml.QNode(_circuit_update, self.dev_update, interface="torch")
 
         def _circuit_output(inputs, weights):
             qml.templates.AngleEmbedding(inputs, wires=self.wires_output)
-            qml.templates.BasicEntanglerLayers(weights, wires=self.wires_output)
+            variational_layer(weights, wires=self.wires_output)
             return [qml.expval(qml.PauliZ(wires=w)) for w in self.wires_output]
 
         self.qlayer_output = qml.QNode(_circuit_output, self.dev_output, interface="torch")
@@ -76,7 +73,6 @@ class QLSTM(nn.Module):
             'output': qml.qnn.TorchLayer(self.qlayer_output, weight_shapes)
         }
         self.clayer_out = torch.nn.Linear(self.n_qubits, self.hidden_size)
-        # self.clayer_out = [torch.nn.Linear(n_qubits, self.hidden_size) for _ in range(4)]
 
     def forward(self, x, init_states=None):
         if self.batch_first is True:

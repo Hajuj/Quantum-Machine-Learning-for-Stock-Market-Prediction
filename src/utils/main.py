@@ -4,6 +4,7 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
+import pennylane as qml
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -20,31 +21,57 @@ from src.models.lstm import LSTM
 from src.models.qlstm import QLSTM
 from src.models.qrnn import QRNN
 
-# Model parameters
-input_size = 4
-hidden_size = 1
-n_qubits = 4
-n_qlayers = 2
-
 # Training parameters
 train_ratio = 0.7
 sequence_length = 10
 batch_size = 16
+n_epochs = 1
+lr = 0.03
+
+# Model parameters
+hidden_size = 1
+
+arch_options = {
+    '1.1': {'variational_layer': qml.templates.BasicEntanglerLayers, 'n_qubits': 4, 'n_qlayers': 2, 'input_size': 4},
+    '1.2': {'variational_layer': qml.templates.BasicEntanglerLayers, 'n_qubits': 4, 'n_qlayers': 3, 'input_size': 4},
+    '1.3': {'variational_layer': qml.templates.BasicEntanglerLayers, 'n_qubits': 8, 'n_qlayers': 2, 'input_size': 4},
+    '1.4': {'variational_layer': qml.templates.BasicEntanglerLayers, 'n_qubits': 8, 'n_qlayers': 3, 'input_size': 4},
+
+    '2.1': {'variational_layer': qml.templates.StronglyEntanglingLayers, 'n_qubits': 4, 'n_qlayers': 2, 'input_size': 4},
+    '2.2': {'variational_layer': qml.templates.StronglyEntanglingLayers, 'n_qubits': 4, 'n_qlayers': 3, 'input_size': 4},
+    '2.3': {'variational_layer': qml.templates.StronglyEntanglingLayers, 'n_qubits': 8, 'n_qlayers': 2, 'input_size': 4},
+    '2.4': {'variational_layer': qml.templates.StronglyEntanglingLayers, 'n_qubits': 8, 'n_qlayers': 3, 'input_size': 4},
+
+    '3.1': {'variational_layer': qml.templates.BasicEntanglerLayers, 'n_qubits': 4, 'n_qlayers': 2, 'input_size': 8},
+    '3.2': {'variational_layer': qml.templates.BasicEntanglerLayers, 'n_qubits': 4, 'n_qlayers': 3, 'input_size': 8},
+    '3.3': {'variational_layer': qml.templates.BasicEntanglerLayers, 'n_qubits': 8, 'n_qlayers': 2, 'input_size': 8},
+    '3.4': {'variational_layer': qml.templates.BasicEntanglerLayers, 'n_qubits': 8, 'n_qlayers': 3, 'input_size': 8},
+
+    '4.1': {'variational_layer': qml.templates.StronglyEntanglingLayers, 'n_qubits': 4, 'n_qlayers': 2, 'input_size': 8},
+    '4.2': {'variational_layer': qml.templates.StronglyEntanglingLayers, 'n_qubits': 4, 'n_qlayers': 3, 'input_size': 8},
+    '4.3': {'variational_layer': qml.templates.StronglyEntanglingLayers, 'n_qubits': 8, 'n_qlayers': 2, 'input_size': 8},
+    '4.4': {'variational_layer': qml.templates.StronglyEntanglingLayers, 'n_qubits': 8, 'n_qlayers': 3, 'input_size': 8},
+        }
 
 # Model selection
-models = {'QLSTM': QLSTM(input_size, hidden_size, n_qubits, n_qlayers),
-          'QRNN': QRNN(input_size, hidden_size, n_qubits, n_qlayers),
-          'LSTM': LSTM(input_size, hidden_size, 1)}
+models = {'QLSTM': lambda config: QLSTM(input_size=config['input_size'], hidden_size=hidden_size, n_qubits=config['n_qubits'], n_qlayers=config['n_qlayers'], variational_layer=config['variational_layer']),
+          'QRNN': lambda config: QRNN(input_size=config['input_size'], hidden_size=hidden_size, n_qubits=config['n_qubits'], n_qlayers=config['n_qlayers']),
+          'LSTM': lambda config: LSTM(input_size=config['input_size'], hidden_size=hidden_size, num_stacked_layers=1)}
 
+arch = '1.1'
+config = arch_options[arch]
+
+# Create model using the selected architecture
+model = models['QLSTM'](config)
 model_name = "QLSTM"
-model = models[model_name]
-arch = "1.1"
 quantum = True
 
+n_qubits = config['n_qubits']
+n_qlayers = config['n_qlayers']
+
 # Loss function and optimizer and scheduler
-n_epochs = 50
 loss_function = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.03)
+optimizer = optim.Adam(model.parameters(), lr=lr)
 scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=(0.1 * 1 / 3), total_iters=n_epochs,
                                   verbose=True)
 
@@ -64,12 +91,12 @@ if not os.path.exists(results_test_dir):
 
 stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
           'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
-# stocks = ['AAPL', 'KO', 'BABA']
+# stocks = ['AAPL', 'KO']
 
 # Heatmap data
 selected_stocks = ['AAPL', 'KO', 'BABA', 'MA', 'PG', 'PFE', 'NKE', 'TSLA', 'T', 'PM']
 selected_stocks_with_result_file = []
-# selected_stocks = ['AAPL', 'KO', 'BABA']
+# selected_stocks = ['AAPL', 'KO']
 
 
 def save_model(model, seed, timestamp, lookback):
