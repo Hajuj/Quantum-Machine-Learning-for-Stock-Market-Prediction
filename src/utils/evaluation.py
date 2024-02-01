@@ -3,7 +3,7 @@ import csv
 import numpy as np
 
 
-def calculate_accuracy_score(percentage_changes, predicted_points, last_actual_value):
+def calculate_accuracy_score(percentage_changes, actual_points, predicted_points, last_actual_value):
 
     if len(percentage_changes) != len(predicted_points):
         raise ValueError("Input arrays must have the same length")
@@ -15,7 +15,7 @@ def calculate_accuracy_score(percentage_changes, predicted_points, last_actual_v
 
     changes = [predicted_points[0] - last_actual_value]
     for i in range(1, len(predicted_points)):
-        change = predicted_points[i] - predicted_points[i - 1]
+        change = predicted_points[i] - actual_points[i - 1]
         changes.append(change)
 
     predicted_trends = np.sign(changes)
@@ -31,9 +31,9 @@ def save_data_to_csv(predictions, actual_values, days, accuracy, stock, constant
     with open(save_path, mode='w', newline='') as file:
         csv_writer = csv.writer(file)
         csv_writer.writerow(
-            ['Stock', 'Day', 'Predicted Price', 'Actual Price', 'Accuracy', 'Model Name', 'Architecture', 'Qubits', 'Layers', 'Seed', 'Lookback', 'Batch Size'])
+            ['Stock', 'Day', 'Predicted Price', 'Actual Price', 'Trend Accuracy', 'Model Name', 'Architecture', 'Qubits', 'Layers', 'Seed', 'Lookback', 'Batch Size'])
         for i in range(len(predictions)):
-            csv_writer.writerow([f'{stock}', days[i], actual_values[i], predictions[i], accuracy] + constants)
+            csv_writer.writerow([f'{stock}', days[i], predictions[i], actual_values[i], accuracy] + constants)
 
 
 def save_data_to_csv_no_accuracy(predictions, actual_values, days, stock, constants, save_path):
@@ -42,4 +42,4 @@ def save_data_to_csv_no_accuracy(predictions, actual_values, days, stock, consta
         csv_writer.writerow(
             ['Stock', 'Day', 'Predicted Price', 'Actual Price', 'Model Name', 'Architecture', 'Qubits', 'Layers', 'Seed', 'Lookback', 'Batch Size'])
         for i in range(len(predictions)):
-            csv_writer.writerow([f'{stock}', days[i], actual_values[i], predictions[i]] + constants)
+            csv_writer.writerow([f'{stock}', days[i], predictions[i], actual_values[i]] + constants)

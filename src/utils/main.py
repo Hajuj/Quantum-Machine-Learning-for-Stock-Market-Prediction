@@ -62,7 +62,7 @@ models = {'QLSTM': lambda config: QLSTM(input_size=config['input_size'], hidden_
           'QRNN': lambda config: QRNN(input_size=config['input_size'], hidden_size=hidden_size, n_qubits=config['n_qubits'], n_qlayers=config['n_qlayers']),
           'LSTM': lambda config: LSTM(input_size=config['input_size'], hidden_size=hidden_size, num_stacked_layers=1)}
 
-arch = '1.4'
+arch = '1.1'
 config = arch_options[arch]
 
 # Create model using the selected architecture
@@ -95,11 +95,11 @@ if not os.path.exists(results_test_dir):
 
 stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
           'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
-# stocks = ['AAPL', 'KO']
+# stocks = ['AAPL']
 
 # Heatmap data
-selected_stocks = ['AAPL', 'KO', 'BABA', 'MA', 'PG', 'PFE', 'NKE', 'TSLA', 'T', 'PM']
-selected_stocks_with_result_file = []
+# selected_stocks = ['AAPL', 'KO', 'BABA', 'MA', 'PG', 'PFE', 'NKE', 'TSLA', 'T', 'PM']
+# selected_stocks_with_result_file = []
 # selected_stocks = ['AAPL', 'KO']
 
 
@@ -121,6 +121,12 @@ for seed in range(1, 6):
     model.set_seed(seed)
 
     print(f"\nTraining with seed: {seed}")
+
+    # Initialize model, LR, and scheduler
+    model = models[model_name](config)
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+    scheduler = lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=(0.1 * 1 / 3), total_iters=n_epochs,
+                                      verbose=True)
 
     # Create CSV file
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -158,7 +164,7 @@ for seed in range(1, 6):
                 # Save stats
                 csv_writer.writerow(
                     [epoch + 1, stock, avg_loss, model_name, arch, n_qubits, n_qlayers, format(scheduler.get_last_lr()[0], '.6f'),
-                     sequence_length, batch_size, len(epochs), seed])
+                     sequence_length, batch_size, n_epochs, seed])
 
             scheduler.step()  # Update the scheduler
 
@@ -210,7 +216,7 @@ for seed in range(1, 6):
 
         predicted_10_points = test.test_model_10day(model, last_sequence, scaler, model_saved_path, sequence_length, arch)
 
-        # Plotting
+        # Get correct indexes from test data
         data = pd.read_csv(data_path)
         data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
 
@@ -219,38 +225,33 @@ for seed in range(1, 6):
         y_values = data['Close'].values
         percentage_changes = data['Percentage Change']
 
-        # Calculate the starting index for test data        TODO : Index check
-        num_train_batches = len(train_loader)
-        train_data_length = batch_size * num_train_batches
+        # Get the length of the training data
+        train_data_length = len(data[:int(len(data) * train_ratio)])
 
-        # difference between actual and predicted points
+        # Calculate the starting index for test data
         x_test_area = x_values[train_data_length:train_data_length + len(predicted_points)]
         y_test_area = y_values[train_data_length:train_data_length + len(predicted_points)]
 
         # plot.plot_1_day_predictions(predicted_points, y_test_area, x_test_area, stock, stock_plot_path)
 
-        # Save test data to csv
-
-        # Calculate Accuracy Score
+        # Calculate Trend Accuracy Score
         last_actual_value = y_values[train_data_length - 1]
         test_percentage_changes = percentage_changes[train_data_length:train_data_length + len(predicted_points)]
-        accuracy_score = evaluation.calculate_accuracy_score(test_percentage_changes, predicted_points,
-                                                             last_actual_value)
+        accuracy_trend_score = evaluation.calculate_accuracy_score(test_percentage_changes, y_test_area, predicted_points,
+                                                                   last_actual_value)
 
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         file_name = f"1_seed{seed}_arch{arch}_qubits{n_qubits}_qlayers{n_qlayers}_lookback{sequence_length}_batch{batch_size}_{timestamp}.csv"
         test_file_path = os.path.join(results, file_name)
 
-        if selected_stocks.__contains__(stock):
-            selected_stocks_with_result_file.append([stock, test_file_path])
+        # if selected_stocks.__contains__(stock):
+        #     selected_stocks_with_result_file.append([stock, test_file_path])
 
         constants = [model_name, arch, n_qubits, n_qlayers, seed, sequence_length, batch_size]
-        evaluation.save_data_to_csv(predicted_points, y_test_area, x_test_area, accuracy_score, stock, constants,
+        evaluation.save_data_to_csv(predicted_points, y_test_area, x_test_area, accuracy_trend_score, stock, constants,
                                     test_file_path)
 
-        # Plot 10 days from 30-11-2023
-        data = pd.read_csv(f'../datasets/stock_data/{stock}.csv')
-        data['Time'] = pd.to_datetime(data['Time'])  # Convert the 'Time' column to datetime objects
+        # Data for 10 days from the first days of test data
         data10 = data[int(len(data) * train_ratio):int(len(data) * train_ratio) + 10].copy()
         x_values = data10['Time'].values
         y_values = data10['Close'].values
@@ -263,7 +264,7 @@ for seed in range(1, 6):
 
         # Save 10 day prediction to csv
 
-        # Baseline using Linear Regression
+        # Baseline using Linear Regression  #TODO: Save to CSV file
         baseline_points = baseline.get_baseline_points(test_loader, scaler)
 
         # Plotting the Baseline
