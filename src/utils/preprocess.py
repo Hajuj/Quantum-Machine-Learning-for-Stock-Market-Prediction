@@ -5,8 +5,8 @@ import pandas as pd
 import torch
 from sklearn.preprocessing import MinMaxScaler
 from torch.utils.data import Dataset, DataLoader
-pd.options.mode.chained_assignment = None
 
+pd.options.mode.chained_assignment = None
 pd.set_option('display.max_columns', None)
 np.set_printoptions(threshold=sys.maxsize)
 torch.set_printoptions(threshold=10_000)

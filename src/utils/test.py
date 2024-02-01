@@ -5,7 +5,7 @@ import preprocess
 import preprocess8inputs
 
 
-def test_model_10day(model, last_sequence, scaler, model_path):
+def test_model_10day(model, last_sequence, scaler, model_path, sequence_length, arch):
     model.load_state_dict(torch.load(model_path))
     model.eval()
     predictions = []
@@ -14,8 +14,14 @@ def test_model_10day(model, last_sequence, scaler, model_path):
         new_sequence = last_sequence
         predictions.append(output)
         for _ in range(9):
-            # new_sequence = preprocess.update_recurrent_sequence(new_sequence, output)
-            new_sequence = preprocess8inputs.update_recurrent_sequence(10, new_sequence, output)
+            if arch == "1.1" or arch == "1.2" or arch == "1.3" or arch == "1.4" or arch == "2.1" or arch == "2.2" or arch == "2.3" or arch == "2.4":
+                new_sequence = preprocess.update_recurrent_sequence(sequence_length, new_sequence, output)
+            elif arch == "3.1" or arch == "3.2" or arch == "3.3" or arch == "3.4" or arch == "4.1" or arch == "4.2" or arch == "4.3" or arch == "4.4":
+                new_sequence = preprocess8inputs.update_recurrent_sequence(sequence_length, new_sequence, output)
+            else:
+                print("Invalid architecture during testing 10 day model!!")
+                exit()
+
             output = model(new_sequence)
             predictions.append(output)
 

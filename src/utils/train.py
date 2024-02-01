@@ -15,16 +15,16 @@ def train_model(model, train_loader, loss_function, optimizer, n_epochs):
             total_loss += loss.item()
 
         current_avg_loss = total_loss / len(train_loader)
-        # if abs(avg_loss - current_avg_loss) < 0.0001:
-        #     small_difference_count += 1
-        # else:
-        #     small_difference_count = 0  # Reset counter if there's a significant change
-        #
-        # # Early stopping check
-        # if small_difference_count >= 10:
-        #     print(f"Epoch {epoch + 1}/{n_epochs}, Loss: {avg_loss:.4f}")
-        #     print(f"Stopped training in epoch {epoch + 1} due to too little loss changes")
-        #     break
+        if abs(avg_loss - current_avg_loss) < 0.0001:
+            small_difference_count += 1
+        else:
+            small_difference_count = 0  # Reset counter if there's a significant change
+
+        # Early stopping check
+        if small_difference_count >= 10:
+            print(f"Epoch {epoch + 1}/{n_epochs}, Loss: {avg_loss:.4f}")
+            print(f"Stopped training in epoch {epoch + 1} due to too little loss changes")
+            break
 
         avg_loss = current_avg_loss
 

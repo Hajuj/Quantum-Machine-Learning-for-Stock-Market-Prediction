@@ -38,7 +38,7 @@ models = {'QLSTM': QLSTM(input_size, hidden_size, n_qubits, n_qlayers),
 
 model_name = "QLSTM"
 model = models[model_name]
-arch = "1"
+arch = "1.1"
 quantum = True
 
 # Loss function and optimizer and scheduler
@@ -64,17 +64,17 @@ if not os.path.exists(results_test_dir):
 
 stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
           'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
-# stocks = ['AAPL']
+# stocks = ['AAPL', 'KO', 'BABA']
 
 # Heatmap data
 selected_stocks = ['AAPL', 'KO', 'BABA', 'MA', 'PG', 'PFE', 'NKE', 'TSLA', 'T', 'PM']
 selected_stocks_with_result_file = []
-# selected_stocks = ['AAPL']
+# selected_stocks = ['AAPL', 'KO', 'BABA']
 
 
-def save_model(model, seed, timestamp):
+def save_model(model, seed, timestamp, lookback):
     """Save the trained model"""
-    model_save_path = os.path.join(model_path, f"{model_name}_arch{arch}_seed{seed}_qlayer{n_qlayers}_{timestamp}.pth")
+    model_save_path = os.path.join(model_path, f"{model_name}_arch{arch}_seed{seed}_lookback{lookback}_{timestamp}.pth")
     torch.save(model.state_dict(), model_save_path)
     print(f'Model saved in {model_save_path}')
 
@@ -109,10 +109,13 @@ for seed in range(1, 6):
                 data_path_cashflow = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Cashflow.csv')
                 data_path_balance = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Balance.csv')
 
-                if n_qubits == 4:
+                if arch == "1.1" or arch == "1.2" or arch == "1.3" or arch == "1.4" or arch == "2.1" or arch == "2.2" or arch == "2.3" or arch == "2.4":
                     train_loader, test_loader, scaler = preprocess.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income)
-                else:
+                elif arch == "3.1" or arch == "3.2" or arch == "3.3" or arch == "3.4" or arch == "4.1" or arch == "4.2" or arch == "4.3" or arch == "4.4":
                     train_loader, test_loader, scaler = preprocess8inputs.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income, data_path_cashflow, data_path_balance)
+                else:
+                    print("Invalid architecture during training!!")
+                    exit()
 
                 print(f'\n{stock} in training: {i + 1}/{len(stocks)}')
 
@@ -129,7 +132,7 @@ for seed in range(1, 6):
             scheduler.step()  # Update the scheduler
 
         # Save the trained model
-        model_saved_path = save_model(model, seed, timestamp)
+        model_saved_path = save_model(model, seed, timestamp, sequence_length)
 
     # Testing
     for i, stock in enumerate(stocks):
@@ -138,13 +141,16 @@ for seed in range(1, 6):
         data_path_cashflow = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Cashflow.csv')
         data_path_balance = os.path.join('..', 'datasets', 'stock_data', f'{stock}_Balance.csv')
 
-        if n_qubits == 4:
+        if arch == "1.1" or arch == "1.2" or arch == "1.3" or arch == "1.4" or arch == "2.1" or arch == "2.2" or arch == "2.3" or arch == "2.4":
             train_loader, test_loader, scaler = preprocess.get_loaders(sequence_length, batch_size, train_ratio,
                                                                        data_path, data_path_income)
-        else:
+        elif arch == "3.1" or arch == "3.2" or arch == "3.3" or arch == "3.4" or arch == "4.1" or arch == "4.2" or arch == "4.3" or arch == "4.4":
             train_loader, test_loader, scaler = preprocess8inputs.get_loaders(sequence_length, batch_size, train_ratio,
                                                                               data_path, data_path_income,
                                                                               data_path_cashflow, data_path_balance)
+        else:
+            print("Invalid architecture while testing!!")
+            exit()
 
         stock_plot_path = f'../plots/{model_name}/{stock}'
         if not os.path.exists(stock_plot_path):
@@ -163,12 +169,15 @@ for seed in range(1, 6):
         # Testing the model
         predicted_points, avg_test_loss = test.test_model(model, test_loader, loss_function, scaler, model_saved_path)
 
-        if n_qubits == 4:
+        if arch == "1.1" or arch == "1.2" or arch == "1.3" or arch == "1.4" or arch == "2.1" or arch == "2.2" or arch == "2.3" or arch == "2.4":
             last_sequence = preprocess.get_last_sequence(sequence_length, train_ratio, data_path, data_path_income)
-        else:
+        elif arch == "3.1" or arch == "3.2" or arch == "3.3" or arch == "3.4" or arch == "4.1" or arch == "4.2" or arch == "4.3" or arch == "4.4":
             last_sequence = preprocess8inputs.get_last_sequence(sequence_length, train_ratio, data_path, data_path_income, data_path_cashflow, data_path_balance)
+        else:
+            print("Invalid architecture while getting last sequence!!")
+            exit()
 
-        predicted_10_points = test.test_model_10day(model, last_sequence, scaler, model_saved_path)
+        predicted_10_points = test.test_model_10day(model, last_sequence, scaler, model_saved_path, sequence_length, arch)
 
         # Plotting
         data = pd.read_csv(data_path)
@@ -198,7 +207,7 @@ for seed in range(1, 6):
                                                              last_actual_value)
 
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        file_name = f"1_{seed}_{arch}_{n_qubits}_{n_qlayers}_{sequence_length}_{batch_size}_{timestamp}.csv"
+        file_name = f"1_seed{seed}_arch{arch}_qubits{n_qubits}_qlayers{n_qlayers}_lookback{sequence_length}_batch{batch_size}_{timestamp}.csv"
         test_file_path = os.path.join(results, file_name)
 
         if selected_stocks.__contains__(stock):
@@ -217,7 +226,7 @@ for seed in range(1, 6):
 
         # plot.plot_10_day_prediction(predicted_10_points, x_values, y_values, stock, stock_plot_path)
 
-        file_name = f"10_seed{seed}_{arch}_{n_qubits}_{n_qlayers}_{sequence_length}_{batch_size}_{timestamp}.csv"
+        file_name = f"10_seed{seed}_arch{arch}_qubits{n_qubits}_qlayers{n_qlayers}_lookback{sequence_length}_batch{batch_size}_{timestamp}.csv"
         test_file_path_10_day = os.path.join(results, file_name)
         evaluation.save_data_to_csv_no_accuracy(predicted_10_points, y_values, x_values, stock, constants, test_file_path_10_day)
 
