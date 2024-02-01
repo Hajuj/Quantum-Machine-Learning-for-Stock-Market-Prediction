@@ -43,3 +43,12 @@ def save_data_to_csv_no_accuracy(predictions, actual_values, days, stock, consta
             ['Stock', 'Day', 'Predicted Price', 'Actual Price', 'Model Name', 'Architecture', 'Qubits', 'Layers', 'Seed', 'Lookback', 'Batch Size'])
         for i in range(len(predictions)):
             csv_writer.writerow([f'{stock}', days[i], predictions[i], actual_values[i]] + constants)
+
+
+def save_baseline_points(baseline_points, days, stock, save_path):
+    with open(save_path, mode='w', newline='') as file:
+        csv_writer = csv.writer(file)
+        csv_writer.writerow(
+            ['Stock', 'Day', 'Baseline Point'])
+        for i in range(len(baseline_points)):
+            csv_writer.writerow([f'{stock}', days[i], baseline_points[i]])

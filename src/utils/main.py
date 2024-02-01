@@ -93,6 +93,10 @@ results_test_dir = f'../results/test/{model_name}'
 if not os.path.exists(results_test_dir):
     os.makedirs(results_test_dir)
 
+results_baseline_dir = f'../results/test/Baseline'
+if not os.path.exists(results_baseline_dir):
+    os.makedirs(results_baseline_dir)
+
 stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
           'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
 # stocks = ['AAPL']
@@ -201,6 +205,10 @@ for seed in range(1, 6):
         if not os.path.exists(results):
             os.makedirs(results)
 
+        baseline_results = results_baseline_dir + f'/{stock}'
+        if not os.path.exists(baseline_results):
+            os.makedirs(baseline_results)
+
         print(f'\nTested stock: {stock}, {i + 1}/{len(stocks)}')
 
         # Testing the model
@@ -262,20 +270,13 @@ for seed in range(1, 6):
         test_file_path_10_day = os.path.join(results, file_name)
         evaluation.save_data_to_csv_no_accuracy(predicted_10_points, y_values, x_values, stock, constants, test_file_path_10_day)
 
-        # Save 10 day prediction to csv
+        # Baseline using Linear Regression
 
-        # Baseline using Linear Regression  #TODO: Save to CSV file
-        baseline_points = baseline.get_baseline_points(test_loader, scaler)
+        if seed == 5:
+            baseline_points = baseline.get_baseline_points(test_loader, scaler)
 
-        # Plotting the Baseline
-        # plot.plot_baseline(baseline_points, y_test_area, x_test_area, stock, stock_plot_path)
+            file_name = f"baseline_points.csv"
+            baseline_file_path = os.path.join(baseline_results, file_name)
+            evaluation.save_baseline_points(baseline_points, x_test_area, stock, baseline_file_path)
 
-        # Evaluation
 
-        # Loss Curve plotting
-        # plot.plot_loss_curve(train_file_path, evaluation_plot_path, stock, seed)
-
-    # accumulated_evaluation_path = f'../plots/evaluation/{model_name}'
-    # plot.plot_accumulated_loss_curve(train_file_path, accumulated_evaluation_path, seed)
-
-    # plot.plot_heatmap(selected_stocks_with_result_file, accumulated_evaluation_path)
