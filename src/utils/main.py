@@ -1,5 +1,6 @@
 import csv
 import os
+import sys
 from datetime import datetime
 
 import numpy as np
@@ -9,6 +10,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
+
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, project_root)
 
 import evaluation
 import plot
@@ -25,7 +29,7 @@ from src.models.qrnn import QRNN
 train_ratio = 0.7
 sequence_length = 10
 batch_size = 16
-n_epochs = 1
+n_epochs = 50
 lr = 0.03
 
 # Model parameters
@@ -58,7 +62,7 @@ models = {'QLSTM': lambda config: QLSTM(input_size=config['input_size'], hidden_
           'QRNN': lambda config: QRNN(input_size=config['input_size'], hidden_size=hidden_size, n_qubits=config['n_qubits'], n_qlayers=config['n_qlayers']),
           'LSTM': lambda config: LSTM(input_size=config['input_size'], hidden_size=hidden_size, num_stacked_layers=1)}
 
-arch = '1.1'
+arch = '1.4'
 config = arch_options[arch]
 
 # Create model using the selected architecture

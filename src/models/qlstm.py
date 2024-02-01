@@ -62,7 +62,10 @@ class QLSTM(nn.Module):
 
         self.qlayer_output = qml.QNode(_circuit_output, self.dev_output, interface="torch")
 
-        weight_shapes = {"weights": (n_qlayers, n_qubits)}
+        if variational_layer == qml.templates.StronglyEntanglingLayers:
+            weight_shapes = {"weights": (n_qlayers, n_qubits, 3)}
+        else:
+            weight_shapes = {"weights": (n_qlayers, n_qubits)}
         print(f"weight_shapes = (n_qlayers, n_qubits) = ({n_qlayers}, {n_qubits})")
 
         self.clayer_in = torch.nn.Linear(self.concat_size, n_qubits)
