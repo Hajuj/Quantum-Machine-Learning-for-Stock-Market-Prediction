@@ -27,7 +27,7 @@ from src.models.qlstm_ibmq import QLSTM_IBMQ
 
 # Training parameters
 train_ratio = 0.7
-sequence_length = 10
+sequence_length = 20
 batch_size = 16
 n_epochs = 50
 lr = 0.03
@@ -100,7 +100,7 @@ if not os.path.exists(results_baseline_dir):
 
 stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
           'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
-# stocks = ['AAPL']
+stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA']
 
 # Heatmap data
 # selected_stocks = ['AAPL', 'KO', 'BABA', 'MA', 'PG', 'PFE', 'NKE', 'TSLA', 'T', 'PM']
@@ -138,6 +138,9 @@ def start_training_testing(model):
         file_name = f"{model_name}_seed{seed}_{timestamp}.csv"
         train_file_path = os.path.join(results_train_dir, file_name)
 
+        early_cutting_counter = 0
+        current_avg_loss = 0
+
         with open(train_file_path, mode='w', newline='') as file:
             csv_writer = csv.writer(file)
             csv_writer.writerow(
@@ -165,6 +168,13 @@ def start_training_testing(model):
                     # Training the model
                     epochs, avg_loss = train.train_model(model, train_loader, loss_function, optimizer, n_epochs=1)
 
+                    if epoch >= 5:
+                        if abs(avg_loss - current_avg_loss) < 0.0005:
+                            early_cutting_counter += 1
+                        else:
+                            early_cutting_counter = 0
+                    current_avg_loss = avg_loss
+
                     print(f"Epoch {epoch + 1}/{n_epochs}, Loss: {avg_loss:.4f}, Seed: {seed}")
 
                     # Save stats
@@ -173,6 +183,9 @@ def start_training_testing(model):
                          sequence_length, batch_size, n_epochs, seed])
 
                 scheduler.step()  # Update the scheduler
+                if early_cutting_counter >= 5:
+                    print(f"Stopped Training in Epoch {epoch + 1} due to too little loss changes!")
+                    break
 
             # Save the trained model
             model_saved_path = save_model(model, seed, timestamp, sequence_length)
