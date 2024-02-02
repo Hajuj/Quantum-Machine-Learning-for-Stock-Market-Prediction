@@ -134,7 +134,7 @@ def start_training_testing(model):
 
         # Create CSV file
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        file_name = f"{model_name}_seed{seed}_{timestamp}.csv"
+        file_name = f"{model_name}_arch{arch}_seed{seed}_lookback{sequence_length}_{timestamp}.csv"
         train_file_path = os.path.join(results_train_dir, file_name)
 
         early_cutting_counter = 0
