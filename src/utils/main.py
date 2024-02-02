@@ -27,7 +27,7 @@ from src.models.qlstm_ibmq import QLSTM_IBMQ
 
 # Training parameters
 train_ratio = 0.7
-sequence_length = 20
+sequence_length = 10
 batch_size = 16
 n_epochs = 50
 lr = 0.03
@@ -100,7 +100,6 @@ if not os.path.exists(results_baseline_dir):
 
 stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
           'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
-stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA']
 
 # Heatmap data
 # selected_stocks = ['AAPL', 'KO', 'BABA', 'MA', 'PG', 'PFE', 'NKE', 'TSLA', 'T', 'PM']
