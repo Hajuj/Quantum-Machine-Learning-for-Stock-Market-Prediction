@@ -67,7 +67,6 @@ def plot_1_day_predictions(predictions, actual_values, time_values, stock, save_
              color='red',
              label='Predicted')
 
-
     # Set the locator and formatter for the x-axis
     locator = mdates.AutoDateLocator(minticks=3, maxticks=10)
     formatter = mdates.ConciseDateFormatter(locator)
@@ -161,36 +160,3 @@ def plot_baseline(predictions, actual_values, time_values, stock, save_path):
     plt.savefig(save_path + '/baseline.png', dpi=300, format='png', bbox_inches='tight')
 
 
-def plot_heatmap(selected_stocks_with_result_file, save_path):
-    # Create a dictionary to hold the mean accuracy values for each stock for the given model
-    accuracy_dict = {}
-
-    # Iterate through each entry in selected_stocks_with_result_file
-    for stock, test_file_path in selected_stocks_with_result_file:
-        # Get the name of the stock
-        stock_name = stock.split("_")[0]  # Extract the stock name from the file name
-
-        # Load the accuracy data from the Excel file and extract the first accuracy value
-        accuracy_data = pd.read_excel(test_file_path)['Accuracy'][0]
-
-        # Check if the stock already exists in the dictionary
-        if stock_name not in accuracy_dict:
-            accuracy_dict[stock_name] = []
-
-        # Append the accuracy value to the corresponding list for the stock
-        accuracy_dict[stock_name].append(accuracy_data)
-
-    # Calculate the mean accuracy for each stock
-    for stock_name in accuracy_dict:
-        accuracy_dict[stock_name] = sum(accuracy_dict[stock_name]) / len(accuracy_dict[stock_name])
-
-    # Convert the dictionary to a DataFrame
-    accuracy_df = pd.DataFrame.from_dict(accuracy_dict, orient='index', columns=['Mean Accuracy'])
-
-    # Plot the heatmap
-    plt.figure(figsize=(10, 6))
-    sns.heatmap(accuracy_df.transpose(), annot=True, cmap='coolwarm', fmt=".2f")
-    plt.title('Mean Accuracy Heatmap')
-    plt.xlabel('Stocks')
-    plt.ylabel('Model')
-    plt.savefig(save_path, dpi=300, format='png', bbox_inches='tight')
