@@ -10,56 +10,107 @@ class QLSTM_IBMQ(nn.Module):
                  n_qubits,
                  n_qlayers,
                  variational_layer,
-                 batch_first=True,
-                 backend="default.qubit"):
+                 batch_first=True):
         super(QLSTM_IBMQ, self).__init__()
         self.n_inputs = input_size
         self.hidden_size = hidden_size
         self.concat_size = self.n_inputs + self.hidden_size
         self.n_qubits = n_qubits
         self.n_qlayers = n_qlayers
-        self.backend = backend
 
         self.batch_first = batch_first
+        self.backend = "ibm_kyoto"
         self.ibmq_token = "XXX"
 
-        self.dev = qml.device('qiskit.ibmq', wires=n_qubits, backend='ibm_osaka', ibmqx_token=self.ibmq_token)
+        self.dev = qml.device('qiskit.ibmq', wires=n_qubits, backend=self.backend, ibmqx_token=self.ibmq_token)
 
-        self.wires_forget = [f"wire_forget_{i}" for i in range(self.n_qubits)]
-        self.wires_input = [f"wire_input_{i}" for i in range(self.n_qubits)]
-        self.wires_update = [f"wire_update_{i}" for i in range(self.n_qubits)]
-        self.wires_output = [f"wire_output_{i}" for i in range(self.n_qubits)]
+        self.wires_forget = range(64)
+        self.wires_input = range(64)
+        self.wires_update = range(64)
+        self.wires_output = range(64)
 
-        self.dev_forget = qml.device('qiskit.ibmq', wires=self.wires_forget, backend='ibm_osaka', ibmqx_token=self.ibmq_token)
-        self.dev_input = qml.device('qiskit.ibmq', wires=self.wires_input, backend='ibm_osaka', ibmqx_token=self.ibmq_token)
-        self.dev_update = qml.device('qiskit.ibmq', wires=self.wires_update, backend='ibm_osaka', ibmqx_token=self.ibmq_token)
-        self.dev_output = qml.device('qiskit.ibmq', wires=self.wires_output, backend='ibm_osaka', ibmqx_token=self.ibmq_token)
+        self.dev_forget = qml.device('qiskit.ibmq', wires=self.wires_forget, backend=self.backend, ibmqx_token=self.ibmq_token)
+        self.dev_input = qml.device('qiskit.ibmq', wires=self.wires_input, backend=self.backend, ibmqx_token=self.ibmq_token)
+        self.dev_update = qml.device('qiskit.ibmq', wires=self.wires_update, backend=self.backend, ibmqx_token=self.ibmq_token)
+        self.dev_output = qml.device('qiskit.ibmq', wires=self.wires_output, backend=self.backend, ibmqx_token=self.ibmq_token)
 
         def _circuit_forget(inputs, weights):
-            qml.templates.AngleEmbedding(inputs, wires=self.wires_forget)
-            variational_layer(weights, wires=self.wires_forget)
-            return [qml.expval(qml.PauliZ(wires=w)) for w in self.wires_forget]
+            num_slices = 16
+            slice_size = 4
+            num_qubits = 127
+
+            # Loop through each slice to apply AngleEmbedding and variational_layer
+            for slice_idx in range(num_slices):
+                start_qubit = (slice_idx * slice_size) % num_qubits
+                # Map numerical indices to custom wire labels
+                wires_slice = range(start_qubit, start_qubit + slice_size)
+
+                qml.templates.AngleEmbedding(inputs[start_qubit:start_qubit + slice_size], wires=wires_slice)
+                qml.templates.BasicEntanglerLayers(weights, wires=wires_slice)
+
+            # After encoding all slices, measure all used qubits at once
+            all_expvals = [qml.expval(qml.PauliZ(wires=w)) for w in range(num_slices * slice_size)]
+            return all_expvals
 
         self.qlayer_forget = qml.QNode(_circuit_forget, self.dev_forget, interface="torch")
 
         def _circuit_input(inputs, weights):
-            qml.templates.AngleEmbedding(inputs, wires=self.wires_input)
-            variational_layer(weights, wires=self.wires_input)
-            return [qml.expval(qml.PauliZ(wires=w)) for w in self.wires_input]
+            num_slices = 16
+            slice_size = 4
+            num_qubits = 127
+
+            # Loop through each slice to apply AngleEmbedding and variational_layer
+            for slice_idx in range(num_slices):
+                start_qubit = (slice_idx * slice_size) % num_qubits
+                # Map numerical indices to custom wire labels
+                wires_slice = range(start_qubit, start_qubit + slice_size)
+
+                qml.templates.AngleEmbedding(inputs[start_qubit:start_qubit + slice_size], wires=wires_slice)
+                qml.templates.BasicEntanglerLayers(weights, wires=wires_slice)
+
+            # After encoding all slices, measure all used qubits at once
+            all_expvals = [qml.expval(qml.PauliZ(wires=w)) for w in range(num_slices * slice_size)]
+            return all_expvals
 
         self.qlayer_input = qml.QNode(_circuit_input, self.dev_input, interface="torch")
 
         def _circuit_update(inputs, weights):
-            qml.templates.AngleEmbedding(inputs, wires=self.wires_update)
-            variational_layer(weights, wires=self.wires_update)
-            return [qml.expval(qml.PauliZ(wires=w)) for w in self.wires_update]
+            num_slices = 16
+            slice_size = 4
+            num_qubits = 127
+
+            # Loop through each slice to apply AngleEmbedding and variational_layer
+            for slice_idx in range(num_slices):
+                start_qubit = (slice_idx * slice_size) % num_qubits
+                # Map numerical indices to custom wire labels
+                wires_slice = range(start_qubit, start_qubit + slice_size)
+
+                qml.templates.AngleEmbedding(inputs[start_qubit:start_qubit + slice_size], wires=wires_slice)
+                qml.templates.BasicEntanglerLayers(weights, wires=wires_slice)
+
+            # After encoding all slices, measure all used qubits at once
+            all_expvals = [qml.expval(qml.PauliZ(wires=w)) for w in range(num_slices * slice_size)]
+            return all_expvals
 
         self.qlayer_update = qml.QNode(_circuit_update, self.dev_update, interface="torch")
 
         def _circuit_output(inputs, weights):
-            qml.templates.AngleEmbedding(inputs, wires=self.wires_output)
-            variational_layer(weights, wires=self.wires_output)
-            return [qml.expval(qml.PauliZ(wires=w)) for w in self.wires_output]
+            num_slices = 16
+            slice_size = 4
+            num_qubits = 127
+
+            # Loop through each slice to apply AngleEmbedding and variational_layer
+            for slice_idx in range(num_slices):
+                start_qubit = (slice_idx * slice_size) % num_qubits
+                # Map numerical indices to custom wire labels
+                wires_slice = range(start_qubit, start_qubit + slice_size)
+
+                qml.templates.AngleEmbedding(inputs[start_qubit:start_qubit + slice_size], wires=wires_slice)
+                qml.templates.BasicEntanglerLayers(weights, wires=wires_slice)
+
+            # After encoding all slices, measure all used qubits at once
+            all_expvals = [qml.expval(qml.PauliZ(wires=w)) for w in range(num_slices * slice_size)]
+            return all_expvals
 
         self.qlayer_output = qml.QNode(_circuit_output, self.dev_output, interface="torch")
 
@@ -100,10 +151,12 @@ class QLSTM_IBMQ(nn.Module):
             # Normalize y_t to be in the range -pi to pi
             y_t = torch.remainder(y_t + torch.pi, 2 * torch.pi) - torch.pi
 
-            f_t = torch.sigmoid(self.clayer_out(self.VQC['forget'](y_t)))
-            i_t = torch.sigmoid(self.clayer_out(self.VQC['input'](y_t)))
-            g_t = torch.tanh(self.clayer_out(self.VQC['update'](y_t)))
-            o_t = torch.sigmoid(self.clayer_out(self.VQC['output'](y_t)))
+            y_t = y_t.flatten()
+
+            f_t = torch.sigmoid(self.clayer_out((self.VQC['forget'](y_t)).view(16, 4)))
+            i_t = torch.sigmoid(self.clayer_out((self.VQC['input'](y_t)).view(16, 4)))
+            g_t = torch.tanh(self.clayer_out((self.VQC['update'](y_t)).view(16, 4)))
+            o_t = torch.sigmoid(self.clayer_out((self.VQC['output'](y_t)).view(16, 4)))
 
             c_t = (f_t * c_t) + (i_t * g_t)
             h_t = o_t * torch.tanh(c_t)
