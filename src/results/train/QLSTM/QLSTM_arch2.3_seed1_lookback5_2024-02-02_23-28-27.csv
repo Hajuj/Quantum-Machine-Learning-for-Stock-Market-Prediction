@@ -1,0 +1,1 @@
+epoch,stock,avg_loss,model_name,arch,n_qubits,n_qlayers,lr,lookback,batch_size,n_epoch,seed
