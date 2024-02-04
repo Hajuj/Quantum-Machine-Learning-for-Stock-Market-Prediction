@@ -1,5 +1,6 @@
 import os
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -52,6 +53,46 @@ def plot_percentage_change_1day(stock, days, actual_changes, qlstm_changes, save
     plt.ylabel('Percentage Change')
     plt.title(f'Percentage Change comparison on stock {stock}')
     plt.legend()
+    plt.savefig(save_path + f'/{stock}.png', dpi=300, format='png', bbox_inches='tight')
+
+
+def plot_predictions_with_mean_curve(stock, days, model_data, actual_points, save_path):
+    # Define colors for the plot
+    model_colors = ['red', 'green', 'black', 'orange', 'purple', 'cyan', 'magenta', 'yellow']
+
+    # Plot actual points
+    plt.figure(figsize=(10, 6))
+    plt.plot(days, actual_points, label='Actual', color='blue')
+
+    # Iterate over each architecture and its data
+    for i, (architecture, data) in enumerate(model_data.items()):
+        # Extract mean, min, and max predictions
+        mean_predictions = data['mean']
+        min_predictions = data['min']
+        max_predictions = data['max']
+
+        # Define color for the model
+        model_color = model_colors[i % len(model_colors)]
+
+        # Plot the area between min and max predictions
+        plt.fill_between(days, min_predictions, max_predictions, alpha=0.3, color=model_color)
+
+        # Plot the mean predictions
+        plt.plot(days, mean_predictions, label=f'{architecture} Mean', linewidth=2,
+                 color=model_color)
+
+    # Add labels and legend
+    plt.xlabel('Time Step')
+    plt.ylabel('Predicted Price')
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+    plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
+
+    # Rotate x-axis labels for better readability
+    plt.xticks(rotation=45)
+    plt.title(f'Model Predictions with Mean Curves for stock {stock}')
+    plt.legend()
+
+    # Save plot
     plt.savefig(save_path + f'/{stock}.png', dpi=300, format='png', bbox_inches='tight')
 
 
