@@ -297,10 +297,10 @@ def start_training_testing(model):
 if __name__ == '__main__':
     # data_path = f'../datasets/stock_data/AAPL.csv'
     # data_path_income = os.path.join('..', 'datasets', 'stock_data', f'AAPL_Income.csv')
-    # model_path = 'quantum_finance_basf/src/trained_model/qlstm/QLSTM_arch1.1_seed1_lookback10_2024-02-01_03-50-00.pth'
+    # model_path = '../trained_model/QLSTM/QLSTM_arch1.2_seed5_lookback5_2024-02-03_15-27-41.pth'
     # model = models['QLSTM_IBMQ'](config)
     # _, test_loader, scaler = preprocess.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income)
     # loss_function = nn.MSELoss()
-    # test.test_model(model, test_loader, loss_function, scaler, model_path)
+    # test.test_ibmq_model(model, test_loader, loss_function, scaler, model_path, data_path, train_ratio, arch="1.2", seed=5, sequence_length=5)
 
     start_training_testing(model)

@@ -35,7 +35,7 @@ class QLSTM_IBMQ(nn.Module):
         self.dev_output = qml.device('qiskit.ibmq', wires=self.wires_output, backend=self.backend, ibmqx_token=self.ibmq_token)
 
         def _circuit_forget(inputs, weights):
-            num_slices = 16
+            num_slices = int(len(inputs) / 4)
             slice_size = 4
             num_qubits = 127
 
@@ -55,7 +55,7 @@ class QLSTM_IBMQ(nn.Module):
         self.qlayer_forget = qml.QNode(_circuit_forget, self.dev_forget, interface="torch")
 
         def _circuit_input(inputs, weights):
-            num_slices = 16
+            num_slices = int(len(inputs) / 4)
             slice_size = 4
             num_qubits = 127
 
@@ -75,7 +75,7 @@ class QLSTM_IBMQ(nn.Module):
         self.qlayer_input = qml.QNode(_circuit_input, self.dev_input, interface="torch")
 
         def _circuit_update(inputs, weights):
-            num_slices = 16
+            num_slices = int(len(inputs) / 4)
             slice_size = 4
             num_qubits = 127
 
@@ -95,7 +95,7 @@ class QLSTM_IBMQ(nn.Module):
         self.qlayer_update = qml.QNode(_circuit_update, self.dev_update, interface="torch")
 
         def _circuit_output(inputs, weights):
-            num_slices = 16
+            num_slices = int(len(inputs) / 4)
             slice_size = 4
             num_qubits = 127
 
