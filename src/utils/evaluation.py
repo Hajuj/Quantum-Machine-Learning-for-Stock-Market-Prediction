@@ -2,6 +2,7 @@ import csv
 
 import numpy as np
 import pandas as pd
+import os
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 import matplotlib.dates as mdates
 import csvPlot
@@ -68,6 +69,15 @@ def calculate_test_mse_loss(actual_points, predicted_points):
     loss = mean_squared_error(actual_points, predicted_points)
     return loss
 
+
+def calculate_test_rmse(actual_points, predicted_points):
+    if len(actual_points) != len(predicted_points):
+        raise ValueError("Predictions and Actual values must have the same length")
+
+    loss = mean_squared_error(actual_points, predicted_points)
+    loss = np.sqrt(loss)
+    return loss
+
 # Read data from csv
 
 
@@ -80,12 +90,29 @@ def get_predicted_points_from_csv(data_path):
     return predicted_points
 
 
+def get_baseline_points_from_csv(data_path):
+    data = pd.read_csv(data_path)
+
+    # Extract the values from the "Predicted Price" column
+    predicted_points = data["Baseline Point"].values.tolist()
+
+    return predicted_points
+
+
 def get_actual_points_from_csv(data_path):
     data = pd.read_csv(data_path)
 
     actual_points = data["Actual Price"].values.tolist()
 
     return actual_points
+
+
+def get_accuracy(data_path):
+    data = pd.read_csv(data_path)
+
+    accuracy = data["Trend Accuracy"][0]
+
+    return accuracy
 
 
 def get_days_from_csv(data_path):
@@ -158,6 +185,18 @@ def get_stock_loss_values(data_path, stock):
 
     return loss_values
 
+def get_epochs(data_path, stock):
+    train_epochs = []
+
+    data = pd.read_csv(data_path)
+    for index, row in data.iterrows():
+        # Check if the value in the "stock" column matches the specified stock
+        if row['stock'] == stock:
+            # If it matches, append the corresponding "avg_loss" value to the array
+            train_epochs.append(row['epoch'])
+
+    return train_epochs
+
 
 def get_accumulated_loss_values(data_path):
     data = pd.read_csv(data_path)
@@ -171,59 +210,175 @@ def get_accumulated_loss_values(data_path):
     return loss_values
 
 
-ex_stock = 'NVDA'
-stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
-          'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
-data_path = "../results/test/QLSTM/NVDA/1_arch1.2_lookback5_seed5.csv"
-actual_points = get_actual_points_from_csv(data_path)
-days = get_days_from_csv(data_path)
-days_num = mdates.date2num(days)
+# # Mean Curve Prediction
+# selected_stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'TSLA', 'MSFT', 'AAPL', 'ABBV',
+#           'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
+#
+# for stock in selected_stocks:
+#
+#     arch1_2_lookback5_points_seed1 = get_predicted_points_from_csv(f'../results/test/QLSTM/{stock}/1_arch1.1_lookback5_seed1.csv')
+#     arch1_2_lookback5_points_seed2 = get_predicted_points_from_csv(f'../results/test/QLSTM/{stock}/1_arch1.1_lookback5_seed2.csv')
+#     arch1_2_lookback5_points_seed3 = get_predicted_points_from_csv(f'../results/test/QLSTM/{stock}/1_arch1.1_lookback5_seed3.csv')
+#     arch1_2_lookback5_points_seed4 = get_predicted_points_from_csv(f'../results/test/QLSTM/{stock}/1_arch1.1_lookback5_seed4.csv')
+#     arch1_2_lookback5_points_seed5 = get_predicted_points_from_csv(f'../results/test/QLSTM/{stock}/1_arch1.1_lookback5_seed5.csv')
+#
+#     arch1_2_lookback10_points_seed1 = get_predicted_points_from_csv(f'../results/test/QLSTM/{stock}/1_arch3.1_lookback5_seed1.csv')
+#     arch1_2_lookback10_points_seed2 = get_predicted_points_from_csv(f'../results/test/QLSTM/{stock}/1_arch3.1_lookback5_seed2.csv')
+#     arch1_2_lookback10_points_seed3 = get_predicted_points_from_csv(f'../results/test/QLSTM/{stock}/1_arch3.1_lookback5_seed3.csv')
+#     arch1_2_lookback10_points_seed4 = get_predicted_points_from_csv(f'../results/test/QLSTM/{stock}/1_arch3.1_lookback5_seed4.csv')
+#     arch1_2_lookback10_points_seed5 = get_predicted_points_from_csv(f'../results/test/QLSTM/{stock}/1_arch3.1_lookback5_seed5.csv')
+#
+#     arch1_3_lookback10_points_seed1 = get_predicted_points_from_csv(f'../results/test/QLSTM/{stock}/1_arch2.1_lookback5_seed1.csv')
+#     arch1_3_lookback10_points_seed2 = get_predicted_points_from_csv(f'../results/test/QLSTM/{stock}/1_arch2.1_lookback5_seed2.csv')
+#     arch1_3_lookback10_points_seed3 = get_predicted_points_from_csv(f'../results/test/QLSTM/{stock}/1_arch2.1_lookback5_seed3.csv')
+#     arch1_3_lookback10_points_seed4 = get_predicted_points_from_csv(f'../results/test/QLSTM/{stock}/1_arch2.1_lookback5_seed4.csv')
+#     arch1_3_lookback10_points_seed5 = get_predicted_points_from_csv(f'../results/test/QLSTM/{stock}/1_arch2.1_lookback5_seed5.csv')
+#
+#     predictions_dict = {
+#      '4qubits_2layer_basic_lookback5_4input': [arch1_2_lookback5_points_seed1, arch1_2_lookback5_points_seed2, arch1_2_lookback5_points_seed3, arch1_2_lookback5_points_seed4, arch1_2_lookback5_points_seed5],
+#      '4qubits_2layer_basic_lookback5_8input': [arch1_2_lookback10_points_seed1, arch1_2_lookback10_points_seed2, arch1_2_lookback10_points_seed3, arch1_2_lookback10_points_seed4, arch1_2_lookback10_points_seed5],
+#      '4qubits_2layer_strong_lookback5_4input': [arch1_3_lookback10_points_seed1, arch1_3_lookback10_points_seed2, arch1_3_lookback10_points_seed3, arch1_3_lookback10_points_seed4, arch1_3_lookback10_points_seed5]
+#     }
+#
+#     data_path = f"../results/test/QLSTM/{stock}/1_arch1.1_lookback10_seed1.csv"
+#     actual_points = get_actual_points_from_csv(data_path)
+#     days = get_days_from_csv(data_path)
+#     days_num = mdates.date2num(days)
+#     # model_data = generate_area_plot_data(predictions_dict)
+#     save_path = f'../plots/mean3'
+#     if not os.path.exists(save_path):
+#         os.makedirs(save_path)
+#     model_data = generate_area_plot_data(predictions_dict)
+#     csvPlot.plot_predictions_with_mean_curve(stock, days_num, model_data, actual_points, save_path)
 
-# Mean Curve Prediction
-
-
-arch1_2_lookback5_points_seed1 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.2_lookback5_seed1.csv')
-arch1_2_lookback5_points_seed2 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.2_lookback5_seed2.csv')
-arch1_2_lookback5_points_seed3 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.2_lookback5_seed3.csv')
-arch1_2_lookback5_points_seed4 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.2_lookback5_seed4.csv')
-arch1_2_lookback5_points_seed5 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.2_lookback5_seed5.csv')
-
-arch1_3_lookback5_points_seed1 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.3_lookback5_seed1.csv')
-arch1_3_lookback5_points_seed2 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.3_lookback5_seed2.csv')
-#arch1_3_lookback5_points_seed3 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.3_lookback5_seed3.csv')
-#arch1_3_lookback5_points_seed4 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.3_lookback5_seed4.csv')
-#arch1_3_lookback5_points_seed5 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.3_lookback5_seed5.csv')
-
-arch1_2_lookback10_points_seed1 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.2_lookback10_seed1.csv')
-arch1_2_lookback10_points_seed2 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.2_lookback10_seed2.csv')
-arch1_2_lookback10_points_seed3 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.2_lookback10_seed3.csv')
-arch1_2_lookback10_points_seed4 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.2_lookback10_seed4.csv')
-arch1_2_lookback10_points_seed5 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.2_lookback10_seed5.csv')
-
-arch1_3_lookback10_points_seed1 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.3_lookback10_seed1.csv')
-arch1_3_lookback10_points_seed2 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.3_lookback10_seed2.csv')
-arch1_3_lookback10_points_seed3 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.3_lookback10_seed3.csv')
-arch1_3_lookback10_points_seed4 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.3_lookback10_seed4.csv')
-arch1_3_lookback10_points_seed5 = get_predicted_points_from_csv(f'../results/test/QLSTM/NVDA/1_arch1.3_lookback10_seed5.csv')
-
-
-predictions_dict = {
-    'Arch1_2_lookback5': [arch1_2_lookback5_points_seed1, arch1_2_lookback5_points_seed2, arch1_2_lookback5_points_seed3, arch1_2_lookback5_points_seed4, arch1_2_lookback5_points_seed5],
-    'Arch1_2_lookback10': [arch1_2_lookback10_points_seed1, arch1_2_lookback10_points_seed2, arch1_2_lookback10_points_seed3, arch1_2_lookback10_points_seed4, arch1_2_lookback10_points_seed5],
-    'Arch1_3_lookback5': [arch1_3_lookback5_points_seed1, arch1_3_lookback5_points_seed2],
-    'Arch1_3_lookback10': [arch1_3_lookback10_points_seed1, arch1_3_lookback10_points_seed2, arch1_3_lookback10_points_seed3, arch1_3_lookback10_points_seed4, arch1_3_lookback10_points_seed5]
-}
-
-# model_data = generate_area_plot_data(predictions_dict)
-save_path = 'C:/Users/Leonard Niessen/Projects/src/plots'
-model_data = generate_area_plot_data(predictions_dict)
-csvPlot.plot_predictions_with_mean_curve(ex_stock, days_num, model_data, actual_points, save_path)
 
 # Heatmap
-selected_stocks = ['AAPL', 'KO', 'BABA', 'MA', 'PG', 'PFE', 'NKE', 'TSLA', 'T', 'PM']
-according_test_files = []
-stocks_with_test_file = []
-# csvPlot.plot_heatmap()
+# save_path = f'../plots/Heatmaps'
+# if not os.path.exists(save_path):
+#     os.makedirs(save_path)
+# selected_stocks = ['NFLX', 'KO', 'BABA', 'MA', 'PG', 'TSM', 'NKE', 'TSLA', 'T', 'PM']
+# stocks_with_test_file = []
+# for stock in selected_stocks:
+#     stocks_with_test_file.append([stock, f'../results/test/QLSTM/{stock}/1_arch2.2_lookback5_seed1.csv'])
+#     stocks_with_test_file.append([stock, f'../results/test/QLSTM/{stock}/1_arch3.2_lookback5_seed1.csv'])
+#     stocks_with_test_file.append([stock, f'../results/test/QLSTM/{stock}/1_arch4.1_lookback5_seed1.csv'])
+#     stocks_with_test_file.append([stock, f'../results/test/QLSTM/{stock}/1_arch4.3_lookback5_seed1.csv'])
+#     stocks_with_test_file.append([stock, f'../results/test/QLSTM/{stock}/1_arch4.2_lookback10_seed1.csv'])
+#     stocks_with_test_file.append([stock, f'../results/test/QLSTM/{stock}/1_arch4.2_lookback5_seed1.csv'])
+#
+#
+# csvPlot.plot_heatmap(stocks_with_test_file, save_path)
+#
+# Accumulated Loss curve in training
+# epochs = get_epochs(f'../results/train/QLSTM/QLSTM_arch1.1_seed1_lookback10_2024-02-01_23-54-07.csv', 'AAPL')
+# save_path = f'../plots/AccLoss'
+# if not os.path.exists(save_path):
+#     os.makedirs(save_path)
+# loss_values = get_accumulated_loss_values(f'../results/train/QLSTM/QLSTM_arch1.1_seed1_lookback5_2024-02-02_13-24-03.csv')
+# csvPlot.plot_mean_loss_curve(epochs, loss_values, save_path)
+#
+# Plot percentage change
+aapl_data = pd.read_csv(f'../datasets/stock_data/PM.csv')
+all_actual_changes = aapl_data['Percentage Change']
+price = aapl_data['Close']
+actual_changes = all_actual_changes[354:]
+last_actual_aapl_value = price[354]
+aapl_qlstm_file = f'../results/test/QLSTM/PM/1_arch4.2_lookback5_seed5.csv'
+save_path = f'../plots/PercentageReturn'
+if not os.path.exists(save_path):
+    os.makedirs(save_path)
+
+data_path = aapl_qlstm_file
+days = get_days_from_csv(data_path)
+days_num = mdates.date2num(days)
+qlstm_changes = get_percentage_change_from_csv(aapl_qlstm_file, last_actual_aapl_value)
+csvPlot.plot_percentage_change_1day('PM', days_num, actual_changes, qlstm_changes, save_path)
+
+
+# Plot Model Price Predictions
+# data_path = f"../results/test/QLSTM/NFLX/1_arch4.2_lookback5_seed4.csv"
+# actual_points = get_actual_points_from_csv(data_path)
+# days = get_days_from_csv(data_path)
+# days_num = mdates.date2num(days)
+# save_path = f'../plots/ModelCompare'
+# if not os.path.exists(save_path):
+#     os.makedirs(save_path)
+# qlstm_points = get_predicted_points_from_csv(f'../results/test/QLSTM/TSM/1_arch4.2_lookback5_seed4.csv')
+# lstm_points = get_predicted_points_from_csv(f'../results/test/LSTM/TSM/1_arch1.1_lookback10_seed1.csv')
+#
+# baseline_points = []
+# baseline_point = actual_points[0]
+# baseline_point_avg = sum(actual_points) / len(actual_points)
+# for i in actual_points:
+#     baseline_points.append(baseline_point)
+#
+# qrnn_points = get_predicted_points_from_csv(f'../results/test/QRNN/TSM/1_arch1.1_lookback10_seed1.csv')
+# csvPlot.plot_all_models_price_1day('TSM', days_num, actual_points, qlstm_points, lstm_points, qrnn_points, baseline_points, save_path)
+
+
+
+# save_path = f'../plots/ModelCompare10day'
+# if not os.path.exists(save_path):
+#     os.makedirs(save_path)
+# data_path = f"../results/test/QLSTM/PM/10_arch4.2_lookback5_seed4.csv"
+# actual_points = get_actual_points_from_csv(data_path)
+# days = get_days_from_csv(data_path)
+# days_num = mdates.date2num(days)
+# qlstm_points = get_predicted_points_from_csv(f'../results/test/QLSTM/PM/10_arch4.2_lookback5_seed2.csv')
+# lstm_points = get_predicted_points_from_csv(f'../results/test/LSTM/PM/10_arch1.1_lookback10_seed3.csv')
+# qrnn_points = get_predicted_points_from_csv(f'../results/test/QRNN/PM/10_arch1.1_lookback10_seed1.csv')
+# baseline_points = []
+# baseline_point = actual_points[0]
+# # baseline_point_avg = sum(actual_points) / len(actual_points)
+# for i in actual_points:
+#     baseline_points.append(baseline_point)
+# csvPlot.plot_all_models_price_10day('PM', days_num, actual_points, qlstm_points, lstm_points, qrnn_points, baseline_points, save_path)
+
+# QLSTM Tournament
+# stocks = ['NVDA', 'DIS', 'KO', 'MO', 'BABA', 'MA', 'V', 'JPM', 'PG', 'TSM', 'META', 'MSFT', 'AAPL', 'ABBV',
+#           'PEP', 'CRM', 'PFE', 'NFLX', 'AMD', 'ABT', 'PM', 'BA', 'NKE', 'GS', 'T', 'C', 'MU']
+#
+# arch2_1_lookback5 = ['1_arch4.3_lookback5_seed1.csv', '1_arch4.3_lookback5_seed2.csv', '1_arch4.3_lookback5_seed3.csv', '1_arch4.3_lookback5_seed4.csv', '1_arch4.3_lookback5_seed5.csv']
+# #arch2_2_lookback5 = ['1_arch4.2_lookback5_seed1.csv', '1_arch4.2_lookback5_seed2.csv', '1_arch4.2_lookback5_seed3.csv', '1_arch4.2_lookback5_seed4.csv', '1_arch4.2_lookback5_seed5.csv']
+# arch2_1_lookback10 = ['1_arch4.3_lookback10_seed1.csv', '1_arch4.3_lookback10_seed2.csv', '1_arch4.3_lookback10_seed3.csv', '1_arch4.3_lookback10_seed4.csv', '1_arch4.3_lookback10_seed5.csv']
+# #arch2_2_lookback10 = ['1_arch4.2_lookback10_seed1.csv', '1_arch4.2_lookback10_seed2.csv', '1_arch4.2_lookback10_seed3.csv', '1_arch4.2_lookback10_seed4.csv', '1_arch4.2_lookback10_seed5.csv']
+#
+# archs = [arch2_1_lookback5, arch2_1_lookback10]
+#
+# arch_accuracy = {}
+#
+# # Iterate over each architecture
+# for arch in archs:
+#     average_accuracy_per_architecture = []
+#
+#     # Iterate over each seed within the architecture
+#     for seed in arch:
+#         # Initialize sum of accuracies for this seed
+#         # total_accuracy = 0
+#         mse_loss = 0
+#
+#         # Iterate over each stock
+#         for stock in stocks:
+#             points_path = f'../results/test/QLSTM/{stock}/{seed}'
+#             # total_accuracy += get_accuracy(points_path)
+#             predicted_points = get_predicted_points_from_csv(points_path)
+#             actual_points = get_actual_points_from_csv(points_path)
+#             mse_loss += calculate_test_rmse(actual_points, predicted_points)
+#
+#         # Calculate average accuracy for this seed across all stocks
+#         average_loss = mse_loss / len(stocks)
+#         average_accuracy_per_architecture.append(average_loss)
+#
+#     # Calculate mean accuracy for this architecture across all seeds
+#     mean_accuracy = np.mean(average_accuracy_per_architecture)
+#
+#     # Store mean accuracy for this architecture
+#     arch_accuracy[arch[0]] = mean_accuracy
+#
+# print(arch_accuracy)
+
+
+
 
 
 

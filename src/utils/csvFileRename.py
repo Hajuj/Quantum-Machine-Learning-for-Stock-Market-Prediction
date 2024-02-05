@@ -2,7 +2,7 @@ import os
 import re
 
 # Define the base directory where your stock directories are located
-base_directory = '../results/test/QLSTM/'
+base_directory = '../results/test/QRNN/'
 
 # Define the patterns to match the filenames
 pattern_1 = re.compile(r'1_seed(\d+)_arch(\d+\.\d+)_qubits(\d+)_qlayers(\d+)_lookback(\d+)_batch(\d+)_(.+)\.csv$')
