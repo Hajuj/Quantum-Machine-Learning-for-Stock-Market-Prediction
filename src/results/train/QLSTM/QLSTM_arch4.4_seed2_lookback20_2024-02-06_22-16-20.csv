@@ -1,0 +1,3 @@
+epoch,stock,avg_loss,model_name,arch,n_qubits,n_qlayers,lr,lookback,batch_size,n_epoch,seed
+1,NVDA,0.19567114398592994,QLSTM,4.4,8,3,0.030000,20,16,50,2
+2,NVDA,0.111490955664998,QLSTM,4.4,8,3,0.029420,20,16,50,2
