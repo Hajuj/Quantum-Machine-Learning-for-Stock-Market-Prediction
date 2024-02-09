@@ -27,7 +27,7 @@ from src.models.qlstm_ibmq import QLSTM_IBMQ
 
 # Training parameters
 train_ratio = 0.7
-sequence_length = 10
+sequence_length = 5
 batch_size = 16
 n_epochs = 50
 lr = 0.03
@@ -63,7 +63,7 @@ models = {'QLSTM': lambda config: QLSTM(input_size=config['input_size'], hidden_
           'QRNN': lambda config: QRNN(input_size=config['input_size'], hidden_size=hidden_size, n_qubits=config['n_qubits'], n_qlayers=config['n_qlayers']),
           'LSTM': lambda config: LSTM(input_size=config['input_size'], hidden_size=hidden_size, num_stacked_layers=1)}
 
-arch = '1.1'
+arch = '2.1'
 config = arch_options[arch]
 
 # Create model using the selected architecture
@@ -297,10 +297,10 @@ def start_training_testing(model):
 if __name__ == '__main__':
     # data_path = f'../datasets/stock_data/AAPL.csv'
     # data_path_income = os.path.join('..', 'datasets', 'stock_data', f'AAPL_Income.csv')
-    # model_path = '../trained_model/QLSTM/QLSTM_arch1.2_seed5_lookback5_2024-02-03_15-27-41.pth'
+    # model_path = '../trained_model/QLSTM/QLSTM_arch2.1_seed2_lookback5_2024-02-02_13-25-03.pth'
     # model = models['QLSTM_IBMQ'](config)
     # _, test_loader, scaler = preprocess.get_loaders(sequence_length, batch_size, train_ratio, data_path, data_path_income)
     # loss_function = nn.MSELoss()
-    # test.test_ibmq_model(model, test_loader, loss_function, scaler, model_path, data_path, train_ratio, arch="1.2", seed=5, sequence_length=5)
+    # test.test_ibmq_model(model, test_loader, loss_function, scaler, model_path, data_path, train_ratio, arch="2.1", seed=2, sequence_length=5)
 
     start_training_testing(model)

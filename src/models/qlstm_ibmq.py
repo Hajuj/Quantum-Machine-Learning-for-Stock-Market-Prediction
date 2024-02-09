@@ -19,7 +19,7 @@ class QLSTM_IBMQ(nn.Module):
         self.n_qlayers = n_qlayers
 
         self.batch_first = batch_first
-        self.backend = "ibm_kyoto"
+        self.backend = "ibm_brisbane"
         self.ibmq_token = "XXX"
 
         self.dev = qml.device('qiskit.ibmq', wires=n_qubits, backend=self.backend, ibmqx_token=self.ibmq_token)
@@ -46,7 +46,7 @@ class QLSTM_IBMQ(nn.Module):
                 wires_slice = range(start_qubit, start_qubit + slice_size)
 
                 qml.templates.AngleEmbedding(inputs[start_qubit:start_qubit + slice_size], wires=wires_slice)
-                qml.templates.BasicEntanglerLayers(weights, wires=wires_slice)
+                qml.templates.StronglyEntanglingLayers(weights, wires=wires_slice)
 
             # After encoding all slices, measure all used qubits at once
             all_expvals = [qml.expval(qml.PauliZ(wires=w)) for w in range(num_slices * slice_size)]
@@ -66,7 +66,7 @@ class QLSTM_IBMQ(nn.Module):
                 wires_slice = range(start_qubit, start_qubit + slice_size)
 
                 qml.templates.AngleEmbedding(inputs[start_qubit:start_qubit + slice_size], wires=wires_slice)
-                qml.templates.BasicEntanglerLayers(weights, wires=wires_slice)
+                qml.templates.StronglyEntanglingLayers(weights, wires=wires_slice)
 
             # After encoding all slices, measure all used qubits at once
             all_expvals = [qml.expval(qml.PauliZ(wires=w)) for w in range(num_slices * slice_size)]
@@ -86,7 +86,7 @@ class QLSTM_IBMQ(nn.Module):
                 wires_slice = range(start_qubit, start_qubit + slice_size)
 
                 qml.templates.AngleEmbedding(inputs[start_qubit:start_qubit + slice_size], wires=wires_slice)
-                qml.templates.BasicEntanglerLayers(weights, wires=wires_slice)
+                qml.templates.StronglyEntanglingLayers(weights, wires=wires_slice)
 
             # After encoding all slices, measure all used qubits at once
             all_expvals = [qml.expval(qml.PauliZ(wires=w)) for w in range(num_slices * slice_size)]
@@ -106,7 +106,7 @@ class QLSTM_IBMQ(nn.Module):
                 wires_slice = range(start_qubit, start_qubit + slice_size)
 
                 qml.templates.AngleEmbedding(inputs[start_qubit:start_qubit + slice_size], wires=wires_slice)
-                qml.templates.BasicEntanglerLayers(weights, wires=wires_slice)
+                qml.templates.StronglyEntanglingLayers(weights, wires=wires_slice)
 
             # After encoding all slices, measure all used qubits at once
             all_expvals = [qml.expval(qml.PauliZ(wires=w)) for w in range(num_slices * slice_size)]
