@@ -13,7 +13,7 @@ This project explores the application of Quantum Machine Learning (QML) in the f
 - **Evaluation on PennyLane and IBM-Q:** Testing and validation of models on PennyLane simulators and real quantum hardware provided by IBM-Q.
 
 ## Resources
-Here you can find our [**Wiki**](https://github.com/Hajuj/Quantum-Machine-Learning-for-Stock-Market-Prediction/wiki/Papers) with some related work on the topic. Also, here you can find our paper for the project with more detailed information [**Paper**](https://github.com/Hajuj/Quantum-Machine-Learning-for-Stock-Market-Prediction/blob/main/QML_for_Stock_Market_Prediction.pdf).
+Here you can find our [**Wiki**](https://github.com/Hajuj/Quantum-Machine-Learning-for-Stock-Market-Prediction/wiki/Papers) with some related work on the topic. Also, here you can find our paper for the project with more detailed information [**Paper**](https://github.com/Hajuj/Quantum-Machine-Learning-for-Stock-Market-Prediction/blob/main/paper/Quantum_Machine_Learning_for_Stock_Market_Prediction.pdf).
 
 ## Contributors
 - Alexander Kovacs
