@@ -1,0 +1,17 @@
+Traditionally, forecasting stock market trends has predominantly leaned on fundamental and technical stock analysis until the emergence of computational approaches employing Machine Learning (ML) models gained relevance. Among these models, some leverage artificial neural networks, enabling the model to glean patterns from data and autonomously tackle specific tasks on its own \cite{Janiesch_2021}. When training data is not size-constrained, the computational demands for model training can escalate significantly, resulting in even modern classical computers requiring excessive time to complete their tasks. Therefore, Quantum Machine Learning (QML) models appear to be a reasonable strategy to decrease computation time, since they can perform better than regular ML models on certain tasks with equivalent parameters \cite{alcazar2020classical}. 
+
+In the past, promising attempts at financial time series forecasting have proven that there already exist classical solutions with acceptable performance such as ARIMA or recurrent neural networks like Long-Short-Term-Memory (LSTM) models \cite{liu2023financial}. Some of these models can be adapted to run on quantum hardware \cite{chen2020quantum} and have been compared to a classical counterpart \cite{s2023potential}. The common conclusion drawn from these comparisons is that the quantum approach does not consistently yield significantly higher-quality predictions; however, it does require less computational time for training\cite{emmanoulopoulos2022quantum}. 
+
+Effectively training an artificial neural network is crucial for achieving good results. A lot of different parameters play an important role during training such as the input size, the learning rate or the circuit architecture of the model. We discuss the process of optimizing hyper-parameters in section \ref{sec:setup}. Compared to previous studies on financial time series forecasting \cite{xu2023quantumenhanced}, we use additional data to train our model. Apart from the daily closing price of each stock, volume and other technical stock indicators are included to make the predictions as good as possible. 
+
+In this work, we analyze the results from training our quantum LSTM (QLSTM) models with different parameters and also compare the best performing one to a classical LSTM, a non-optimized quantum recurrent neural network (QRNN) and a simple baseline. The objective is to determine which parameter adjustments positively impact predictions and how the forecasting quality trades off with the computational time required for training. In our experiment, as described in Section \ref{sec:setup}, we partition the financial data into training and testing sets before pre-processing it to fit the respective model. The training split is fed into a quantum circuit in order to let the model learn patterns from underlying data by comparing its own predictions with the actual values and then calculates the quality of its predictions with the help of a loss function. Afterwards, the testing split is fed into the same circuit to generate predictions which are then used to evaluate the model itself.
+
+
+Regarding the evaluation in section \ref{sec:evaluation}, we compare each model using evaluation metrics such as the mean squared error (MSE) and accuracy score before discussing our findings in Section \ref{sec:conclusion}.
+
+
+
+
+
+
+

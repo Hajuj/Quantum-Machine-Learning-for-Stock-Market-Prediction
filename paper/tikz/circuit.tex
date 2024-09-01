@@ -1,0 +1,7 @@
+\begin{quantikz} % For a tutorial on quantikz, see http://mirrors.ibiblio.org/CTAN/graphics/pgf/contrib/quantikz/quantikz.pdf
+ \lstick{$\ket{0}$} \qw & \gate{H} & \ctrl{4}  & \qw  & \qw & \qw & \gate[wires=4]{QFT^\dagger}  &    \rstick{$\ket{\phi_1}$} \qw \\
+ \lstick{$\ket{0}$} \qw &  \gate{H} & \qw & \ctrl{3}  & \qw  & \qw  & \qw &  \rstick{$\ket{\phi_2}$}\qw \\
+  \lstick{$\vdots$} & &  &  &  \ \ldots\  & &  & \rstick{$\vdots$}\qw \\
+ \lstick{${h1}$} \qw  & \gate{H} & \qw & \qw  & \qw & \ctrl{1}   & \qw &  \rstick{$\ket{\phi_m}$}\qw \\
+ \lstick{$\ket{\varphi_i}$} \qw & \qw & \gate{U}  & \gate{U^2}   & \ \ldots\ \qw &  \gate{U^{2^{m-1}}}  & \qw  & \rstick{$\ket{\varphi_i}$}\qw 
+\end{quantikz}

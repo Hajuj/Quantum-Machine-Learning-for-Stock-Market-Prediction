@@ -1,0 +1,97 @@
+\subsection{Data Pre-Processing}
+For predicting future stock prices, we first fetch actual stock data of 28 stocks from the past two years via an Alpha Vantage API \cite{AlphaVantageAPI}. Four to eight different stock data are picked to predict stock prices. We set a train and test split of 70 percent, meaning the first 70 percent of the past 2 years is used for training our models and on the remaining 30 percent the models get tested. Then data needs to be normalized to fit a neural network. There are several scalers that can be used, we found the MinMaxScaler from scikit-learn \cite{scikit-learn} to work the best, which scales the data between -1 and 1. 
+After that, data sequences of several days are created, so our models can predict the next day, by utilizing a sequence of a certain amount of past days.
+To make the training more efficient, the sequences get mixed and bound to batches of size 16, so 16 random sequences of several days are getting fed to the model at once. Further in depth explanation about the data and steps in the pre-processing will be given in the following two sections.
+\subsection{Stock Data}
+Stock price predictions require data that influence price movements in a certain way.
+The first three kinds of stock data below are daily stock data, that change every day, the rest are data about the company, influencing its value directly and therefore its stock price. These company data are reported every three months, so they only change every three months.
+The selected stock data (later input features) are as follows:
+
+\begin{itemize}
+    \item \textbf{Stock Price}: Historical stock prices can be used to find certain pattern that may repeat themselves in the future.
+    \item \textbf{Volume}: Amount of total shares traded in a day. Can be an indicator for bigger prize changes.
+    \item \textbf{Percentage Change}: Relative price change over a day, indicating a trend in the positive or negative direction.
+    \item \textbf{Revenue}: Generated income of a company, an indicator for the quality and popularity of the products made by a company.
+    \item \textbf{EBIT}: Earnings Before Interest and Taxes, measures the success and efficiency of a company to produce at low costs. 
+    \item \textbf{Cashflow}: Flow of money in a company, expresses liquidity, and is the difference of income and expenditures. It indicates the ability to pay debts or finance new investments. A lower liquidity can increase the risk of insolvency.
+    \item \textbf{Assets}: All resources a company owns, including buildings, machinery, equipment, money, shares and more. It contributes to the value of a company.
+    \item \textbf{Long Term Debts}: Debts a company has to pay back in more than a year. Higher long term debts come at the expense of a company's profits, due to higher interests and can increase the risk of insolvency.
+\end{itemize}
+
+\subsection{Hyperparameter Selection}
+Hyperparameter selection is crucial for optimizing learning efficiency in QNNs, such as QLSTMs and QRNNs. These externally configured parameters significantly influence model performance, convergence speed, and overall learning effectiveness. Appropriate hyperparameter tuning is key to navigating the complex optimization landscapes of QNNs, facilitating swift convergence to global optima and managing the balance between generalization and fitting, thereby mitigating overfitting and underfitting issues \cite{jin2022hyperparameter}.
+
+
+In our research, we have chosen a set of hyperparameters for the QLSTM and QRNN models, tailored to maximize their performance for our specific tasks. The selected hyperparameters are as follows:
+
+\begin{itemize}
+    \item \textbf{Learning Rate (LR)}: a crucial parameter in gradient descent optimization, controls the step size towards the loss function's minimum. To achieve efficient and effective model convergence, the LR is initially set at \(0.03\) and linearly decreased to \(0.001\) across epochs using a PyTorch scheduler \cite{paszke2019pytorch}. This approach ensures a balance between swift initial advancements and meticulous fine-tuning in subsequent phases.
+    \item \textbf{Number of Qubits}: We utilize 4 and 8 qubits. This choice reflects a balance between computational tractability and the capability to represent complex features in the data.
+    \item \textbf{Number of Variational Layers}: Set to 2 and 3, these layers form the core of the variational approach in our quantum circuits, allowing for a rich space of representable functions.
+    \item \textbf{Rotations in VQC for QLSTM}: We use the BasicEntanglerLayers and StronglyEntanglingLayers from PennyLane \cite{bergholm2022pennylane}, which provide an effective entanglement strategy for our quantum gates.
+    \item \textbf{Rotations in VQC for QRNN}: We adopt the rotation sequence $RX$, $RZ$, $RX$, enabling a robust framework for feature extraction and transformation.
+    \item \textbf{Optimizer}: The Adam optimizer \cite{kingma2017adam} is chosen for its adaptive learning rate capabilities, enhancing the model's ability to converge.
+    \item \textbf{Number of Epochs}: Set to 50, this number determines the maximum iterations over the entire dataset for training, ensuring adequate exposure to the data for learning. To optimize the number of epochs and to prevent overfitting, we use early cutting if the model does not learn anymore, more precisely if the loss does not decrease anymore. That means, if the loss decreases less than 0.0005 five times, the training terminates. 
+    \item \textbf{Lookback/Sequence Length}: Values of 5, 10 and 20 are selected, defining the number of previous time steps to consider for predicting the future value, crucial for capturing temporal dependencies in time series data.
+    \item \textbf{Batch Size}: Set to 16, this parameter determines the batch size for training, influencing the gradient estimation and update steps in each epoch.
+    \item \textbf{Scaler}: The MinMax scaler \cite{scikit-learn} is employed for feature scaling, normalizing the input data to aid in faster and more stable convergence of the model.
+    The formula for transformation is given by the scikit-learn \cite{scikit-learn} documentation: 
+    \[X_{std} = (X - X.min) / (X.max - X.min)\]
+    \[X_{scaled} = X_{std} * (max - min) + min\]
+    where X is the actual value, X.min and X.max are the minimum and maximum of the feature input, min and max equal the scaling range.
+\end{itemize}
+
+The convergence, generalization, and overall performance of QLSTM and QRNN models are significantly influenced by these hyperparameters, making their selection a vital aspect of our research methodology.
+
+\subsection{Metrics}
+In this section, we describe the evaluation metrics used to assess the performance of our models in forecasting stock market trends. We employ commonly used metrics such as mean squared error (MSE) and trend accuracy score to quantify the predictive accuracy and performance of each model. 
+
+\subsubsection{MSE}
+
+is a widely used metric to measure the average squared differences between the predicted values and the actual values. It is calculated as the average of the squared differences between the predicted values ($\hat{y}_i$) and the actual values ($y_i$) for all data points ($n$) in the dataset:
+
+\[
+MSE = \frac{1}{n} \sum_{i=1}^{n} (\hat{y}_i - y_i)^2
+\]
+
+where $\hat{y}_i$ represents the predicted value and $y_i$ represents the actual value for the $i^{th}$ data point.
+
+A lower MSE indicates better predictive performance, as it signifies that the model's predictions are closer to the actual values.
+
+\subsubsection{Trend Accuracy Score}
+
+is a metric used to evaluate the correctness of the predicted trends in stock price movements. In this context, we define a correct trend prediction as one where the model correctly predicts whether the stock price will rise or fall. 
+
+To calculate the accuracy score, we first determine the predicted trend for each data point by comparing the predicted value to the previous actual value. If the predicted value is higher than the previous actual value and the stock price actually rises, or if the predicted value is lower and the stock price actually falls, then the prediction is characterized as correct. 
+
+The accuracy score is then calculated as the ratio of the number of correct predictions to the total number of predictions made by the model. 
+
+This metric provides insight into the model's ability to capture the overall direction of stock price movements.
+
+\subsection{Train Test Split of Stock Data}
+Dividing datasets into training and testing sets is essential in the data preprocessing phase for ML applications, including in the context of QNNs. This procedure is critical for multiple reasons:
+
+\begin{enumerate}
+    \item \textbf{Model Evaluation:} Utilizing a test set allows for an unbiased assessment of the model post-training, facilitating the evaluation of its generalization to unseen data.
+    \item \textbf{Prevention of Overfitting:} Keeping a subset of data separate aids in ensuring the model does not overfit to the training data, where overfitting is characterized by the model learning the noise and fluctuations in the training data to the degree that it impairs performance on new data \cite{goodfellow2016deep}.
+\end{enumerate}
+
+For our study, we have adopted the following strategy for the train test split:
+
+\begin{itemize}
+    \item \textbf{Split Ratio:} The dataset is divided into 70\% for training and 30\% for testing. This split ensures that the model has sufficient data to learn from, while also providing a substantial amount of unseen data for testing.
+    \item \textbf{Batch Processing:} The data, post-split, is divided into batches of size 16. This batch size is chosen to balance the computational load and the granularity of the gradient update process. During the training phase, these batches are shuffled randomly to improve generalization.
+\end{itemize}
+
+\subsection{Simulators and Hardware}
+In this work, PennyLane \cite{bergholm2022pennylane}, a prominent quantum computing framework, was employed to simulate quantum algorithms. PennyLane's integration capabilities between classical and quantum computations are particularly beneficial for developing and evaluating QRNN models, including QLSTM.
+
+The utilization of PennyLane is instrumental for its provision of a controlled testing environment, facilitating the validation and refinement of our models absent the noise and constraints associated with actual quantum hardware. This feature is invaluable for the expedited prototyping and debugging of quantum algorithms, especially during the preliminary stages of quantum research where access to quantum hardware may be restricted \cite{bergholm2022pennylane}.
+
+Subsequent to the simulation and validation stages via PennyLane, the quantum algorithms were executed on genuine quantum hardware through IBM-Q \cite{IBMQuantum2023}. The deployment on IBM-Q hardware is critical to assess the algorithms' real-world performance, considering factors like quantum noise and hardware imperfections.
+
+The QLSTM architecture proposed in this study incorporates four VQCs, with each VQC corresponding to a distinct job on the IBM Quantum (IBM-Q) platform. Specifically, when the lookback hyperparameter is configured to 10, each VQC must be executed 40 times to facilitate the prediction for the subsequent (11th) day. Consequently, this results in a cumulative total of 160 executions across all VQCs.
+
+For the experimental setup, the QLSTM was trained on the "ibm\textunderscore brisbane" quantum computer, receiving input tensors comprising four features across 16 batches, thereby constituting a $16 \times 4$ tensor structure. Since IBM-Q infrastructure does not inherently support batch processing, a method was devised to mitigate the need to execute the VQCs 640 times (40 executions x 16 batches). This was achieved by parallelizing 16 VQCs within the available 127 qubits, effectively reducing the operational footprint to 64 qubits per VQC execution.
+
+Despite this optimization, the experimental phase encountered significant delays attributed to the extensive queue times on the IBM-Q platform, aggravated by the requirement to run 400 VQCs. This figure is derived from the necessity to process 10 batches over a 10-day lookback period for each of the four VQCs. As of the submission date of this paper, the prolonged queuing times have precluded the acquisition of experimental results.

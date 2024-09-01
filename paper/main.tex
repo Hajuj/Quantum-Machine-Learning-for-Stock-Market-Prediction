@@ -1,0 +1,86 @@
+\documentclass[10pt,conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{amsmath,amssymb,amsfonts}                           %For wrting math
+\usepackage{hyperref}                                           %For nice links and URLs
+\usepackage[caption=false]{subfig}                              %For subfigures
+% \usepackage[linesnumbered,algoruled,boxed,lined]{algorithm2e}   %For algorithms
+\usepackage{tikz}                                               %Tikz for drawing
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usetikzlibrary{quantikz2}                                      %Quantikz for drawing qauntum circuits
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% To fix ugly table captions proposed in the IEEE template.
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd{\@makecaption}
+  {\scshape}
+  {}
+  {}
+  {}
+\makeatletter
+\patchcmd{\@makecaption}
+  {\\}
+  {.\ }
+  {}
+  {}
+\makeatother
+\def\tablename{Tab.}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Place custom imports here:
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\title{Optimizing Quantum Long Short-Term Memory for Financial Time Series Forecasting}
+
+\author{\IEEEauthorblockN{Mohamad Hagog, Alexander Kovacs, Leonard Niessen and Florian Eckstaller}
+\IEEEauthorblockA{\textit{LMU Munich} \\ \textit{Department of Computer Science}}}
+\maketitle
+
+\begin{abstract}
+\input{txt/0_Abstract}
+\end{abstract}
+
+\section{Introduction}
+\label{sec:introduction}
+\input{txt/1_Introduction}
+
+\section{Background}
+\label{sec:background}
+\input{txt/2_Background}
+
+\section{Related Work}
+\label{sec:relatedwork}
+\input{txt/3_Related-Work}
+
+\section{Methodology}
+\label{sec:methodology}
+\input{txt/4_Methodology}
+
+\section{Experimental Setup}
+\label{sec:setup}
+\input{txt/5_Experimental-Setup}
+
+\section{Evaluation}
+\label{sec:evaluation}
+\input{txt/6_Evaluation}
+
+\section{Conclusion}
+\label{sec:conclusion}
+\input{txt/7_Conclusion}
+
+\section*{Author Contributions}
+Mohamad contributed to Section \ref{sec:background}, \ref{sec:methodology}, \ref{sec:setup}, \ref{sec:evaluation}. Leonard contributed to Section
+\ref{sec:introduction}, \ref{sec:setup}, \ref{sec:evaluation} and abstract. Alex contributed to Section \ref{sec:background}, \ref{sec:setup}, \ref{sec:evaluation}. Florian contributed to Section \ref{sec:relatedwork}, \ref{sec:methodology}
+\ref{sec:conclusion}.
+
+\bibliographystyle{unsrt}  
+\bibliography{references} 
+\end{document}
