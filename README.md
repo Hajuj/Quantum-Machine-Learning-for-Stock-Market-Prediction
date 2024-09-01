@@ -13,7 +13,7 @@ This project explores the application of Quantum Machine Learning (QML) in the f
 - **Evaluation on PennyLane and IBM-Q:** Testing and validation of models on PennyLane simulators and real quantum hardware provided by IBM-Q.
 
 ## Resources
-Here you can find our [Wiki](https://gitlab.lrz.de/mobile-ifi/qcp/23ws/quantum_finance_basf/-/wikis/Papers) with some related work on the topic.
+Here you can find our [Wiki]([https://gitlab.lrz.de/mobile-ifi/qcp/23ws/quantum_finance_basf/-/wikis/Papers](https://github.com/Hajuj/Quantum-Machine-Learning-for-Stock-Market-Prediction/wiki/Papers)) with some related work on the topic.
 
 ## Contributors
 - Alexander Kovacs
