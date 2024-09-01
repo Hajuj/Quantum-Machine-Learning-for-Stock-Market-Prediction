@@ -16,10 +16,10 @@ This project explores the application of Quantum Machine Learning (QML) in the f
 Here you can find our [Wiki](https://gitlab.lrz.de/mobile-ifi/qcp/23ws/quantum_finance_basf/-/wikis/Papers) with some related work on the topic.
 
 ## Contributors
-- Alexander Kovacs @akovacs
-- Florian Eckstaller @00000000013586DE
-- Leonard Niessen @00000000013540DD
-- Mohamad Hgog @mhgog
+- Alexander Kovacs
+- Florian Eckstaller
+- Leonard Niessen
+- Mohamad Hagog
 
 ## Acknowledgment
 The QML project is being conducted at Ludwig Maximilian University of Munich (LMU Munich) as part of the Quantum Computing (QC) Optimization Challenge hosted by the Quantum Applications and Research Laboratory (QAR-Lab). This project is in collaboration with the industry partner BASF.
